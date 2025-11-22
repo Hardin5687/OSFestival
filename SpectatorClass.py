@@ -1,184 +1,153 @@
-{
-  "cells": [
-    {
-      "cell_type": "code",
-      "execution_count": 1,
-      "metadata": {
-        "id": "sVz0KSJfd_8N"
-      },
-      "outputs": [],
-      "source": [
-        "import threading\n",
-        "import random\n",
-        "import time\n",
-        "import numpy as np"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": 4,
-      "metadata": {
-        "id": "fghW5Wy8I6jz"
-      },
-      "outputs": [],
-      "source": [
-        "class Stage():\n",
-        "  pass"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": null,
-      "metadata": {
-        "id": "ZRg7aK_weefA"
-      },
-      "outputs": [],
-      "source": [
-        "personalities = {\n",
-        "    #A dictionary of archetypes. Different personalities prefer different things\n",
-        "    ['averageJoe']:{'flirt':3, 'fight':3, 'alcohol':3, 'drug':3, 'musicFave':None, 'musicHate':None, 'moneyMax':150, 'moneyMin':50}\n",
-        "}\n",
-        "\n",
-        "#locations will be a dictionary of all locations by their types\n",
-        "\n",
-        "class Spectator(threading.Thread):\n",
-        "  def __init__(self, ID, personality, locations:dict):\n",
-        "    super().__init__()\n",
-        "    self.locationList=locations\n",
-        "    self.attributes={ #A dictionary of attributes that are NOT weights for decision making\n",
-        "        'musicFave':personality['musicFave'],\n",
-        "        'musicHate':personality['musicHate'],\n",
-        "        'ID':ID\n",
-        "    }\n",
-        "    self.inventory={ #A dictionary of things the spectator has. If they already have food, when they get hungry they won't need to go elsewhere to buy it\n",
-        "        'food':0,\n",
-        "        'water':0,\n",
-        "        'alcohol':0,\n",
-        "        'money':random.randint(personality['moneyMin'], personality['moneyMax']),\n",
-        "        'drugs':0 #Could be part of personality\n",
-        "    }\n",
-        "    self.location = None\n",
-        "    self.relationships=[]\n",
-        "    self.interactions=[]\n",
-        "    self.preferences={ #A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.\n",
-        "        'dance':5,\n",
-        "        'hunger':random.randint(1, 3),\n",
-        "        'thirst':random.randint(1, 3),\n",
-        "        'flirt':personality['flirt'],\n",
-        "        'fight':personality['fight'],\n",
-        "        'alcohol':personality['alcohol'],\n",
-        "        'drug':personality['drug'],\n",
-        "        'bathroom':0\n",
-        "    }\n",
-        "\n",
-        "  def forcedDecisions(self):\n",
-        "    #First method: IF I have a partner and someone is flirting with them, fight them\n",
-        "    for relation in self.relationships:\n",
-        "      if relation['type']=='partner':\n",
-        "        for interaction in self.location.interactions:\n",
-        "          if interaction['type']=='flirt' and interaction['target']==relation['person']:\n",
-        "            return 'fight'\n",
-        "    #Second method: IF I am already in a fight, keep fighting\n",
-        "    for interaction in self.location.interactions:\n",
-        "      if interaction['type']=='fight' and interaction['participants'].__contains__(self):\n",
-        "        return 'fight'\n",
-        "    #Third method: IF my favorite music is playing, I have a high chance to dance\n",
-        "    if type(self.location) == Stage:\n",
-        "      if self.location.music == self.attributes['musicFave']:\n",
-        "        if random.randint(1,10)>3: #70% chance to dance if favorite music is playing\n",
-        "          return 'dance'  \n",
-        "  \n",
-        "    #This method will check mandatory decisions. Examples:\n",
-        "    #If someone is flirting with my partner, fight them\n",
-        "    #If I am already in a fight, keep fighting\n",
-        "    #If my favorite music is playing, I have a high chance to dance\n",
-        "    #In the end, return decision\n",
-        "    #return None if no decision was reached. That will trigger the normal decision making function\n",
-        "    #Expect this method to grow very long as we make the code more complex. A lot of interactions will be contained here.\n",
-        "    return None\n",
-        "\n",
-        "  def decision(self):\n",
-        "    #This should run soft max and return the spectator's next action\n",
-        "    total=0\n",
-        "    softmax=[]\n",
-        "    for key in self.preferences.keys():\n",
-        "      val=np.e**self.preferences[key]\n",
-        "      softmax.append([key, val])\n",
-        "      total+=val\n",
-        "    choice=random.randint(range(total))\n",
-        "    total=0\n",
-        "    for decision in softmax:\n",
-        "      total+=decision[1]\n",
-        "      if choice < total:\n",
-        "        return decision[0]\n",
-        "\n",
-        "  def run(self):\n",
-        "    while True:\n",
-        "      #First we should be checking things like relationships that may force our decision\n",
-        "      decision = self.forcedDecisions\n",
-        "      if decision == None:\n",
-        "        decision = self.decision()\n",
-        "      if decision == 'dance':\n",
-        "        didIDoTheThing = self.goDance()\n",
-        "        if didIDoTheThing:\n",
-        "          time.sleep(5)\n",
-        "        #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)\n",
-        "        #This can affect our preferences. If we didnt do the thing (we dont like the music, we were rejected, whatever), we will inevitably grow angrier + other effects\n",
-        "        #This mean action functions shoudl return wether or not we were successful\n",
-        "      elif decision == 'eat':\n",
-        "        didIDoTheThing = self.goEat()\n",
-        "      elif decision == 'flirt':\n",
-        "        didIDoTheThing = self.goFlirt()\n",
-        "      #ETC\n",
-        "      #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision\n",
-        "\n",
-        "  def goDance(self):\n",
-        "    if type(self.location) == Stage:\n",
-        "      if self.location.music == self.attributes['musicHate']:\n",
-        "        return False\n",
-        "      else:\n",
-        "        return True\n",
-        "    else:\n",
-        "      for stage in self.locationList['stages']:\n",
-        "        if stage.music == self.attributes['musicFave']:\n",
-        "          self.location.sendTo(self, stage)\n",
-        "          return True\n",
-        "      stage = random.choice(self.locationList['stages'])\n",
-        "      self.location.sendTo(self, stage)\n",
-        "      return True\n",
-        "\n",
-        "  def goEat(self):\n",
-        "    if self.inventory['food']==0:\n",
-        "      #If we have no food, go buy some\n",
-        "      #I'm still working on how to choose the closest decision or how to manage paths\n",
-        "      target=random.choice(self.locationList['foodCarts'])\n",
-        "      self.location.sendTo(self, target)\n",
-        "      #foodCart not implemented, so this is a draft\n",
-        "      food = random.choice(list(self.location.menu.keys()))\n",
-        "      if self.location.menu[food]['price']>self.inventory['money']:\n",
-        "        return False\n",
-        "      else:\n",
-        "        self.inventory['food']+=self.location.purchase(self, food)\n",
-        "    while self.inventory['food']>0 and self.preferences['hunger']>0:\n",
-        "      time.sleep(1)\n",
-        "      self.inventory['food']-=1\n",
-        "      self.preferences['hunger']-=1\n",
-        "    return True\n"
-      ]
+# Libraries
+import threading
+import random
+import time
+import numpy as np
+
+
+# Stage class
+class Stage:
+    pass
+
+
+# Personalities dictionary
+personalities = {
+    # A dictionary of archetypes. Different personalities prefer different things
+    'averageJoe': {
+        'flirt': 3,
+        'fight': 3,
+        'alcohol': 3,
+        'drug': 3,
+        'musicFave': None,
+        'musicHate': None,
+        'moneyMax': 150,
+        'moneyMin': 50
     }
-  ],
-  "metadata": {
-    "colab": {
-      "provenance": []
-    },
-    "kernelspec": {
-      "display_name": "Python 3",
-      "name": "python3"
-    },
-    "language_info": {
-      "name": "python"
-    }
-  },
-  "nbformat": 4,
-  "nbformat_minor": 0
 }
+
+# locations will be a dictionary of all locations by their types
+
+
+class Spectator(threading.Thread):
+    def __init__(self, ID, personality, locations: dict):
+        super().__init__()
+        self.locationList = locations
+        self.attributes = {  # A dictionary of attributes that are NOT weights for decision making
+            'musicFave': personality['musicFave'],
+            'musicHate': personality['musicHate'],
+            'ID': ID
+        }
+        self.inventory = {  # A dictionary of things the spectator has. If they already have food, when they get hungry they won't need to go elsewhere to buy it
+            'food': 0,
+            'water': 0,
+            'alcohol': 0,
+            'money': random.randint(personality['moneyMin'], personality['moneyMax']),
+            'drugs': 0  # Could be part of personality
+        }
+        self.location = None
+        self.relationships = []
+        self.interactions = []
+        self.preferences = {  # A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.
+            'dance': 5,
+            'hunger': random.randint(1, 3),
+            'thirst': random.randint(1, 3),
+            'flirt': personality['flirt'],
+            'fight': personality['fight'],
+            'alcohol': personality['alcohol'],
+            'drug': personality['drug'],
+            'bathroom': 0
+        }
+
+    def forcedDecisions(self):
+        # First method: IF I have a partner and someone is flirting with them, fight them
+        for relation in self.relationships:
+            if relation['type'] == 'partner':
+                for interaction in self.location.interactions:
+                    if interaction['type'] == 'flirt' and interaction['target'] == relation['person']:
+                        return 'fight'
+        # Second method: IF I am already in a fight, keep fighting
+        for interaction in self.location.interactions:
+            if interaction['type'] == 'fight' and self in interaction['participants']:
+                return 'fight'
+        # Third method: IF my favorite music is playing, I have a high chance to dance
+        if isinstance(self.location, Stage):
+            if self.location.music == self.attributes['musicFave']:
+                if random.randint(1, 10) > 3:  # 70% chance to dance if favorite music is playing
+                    return 'dance'
+
+        # This method will check mandatory decisions. Examples:
+        # If someone is flirting with my partner, fight them
+        # If I am already in a fight, keep fighting
+        # If my favorite music is playing, I have a high chance to dance
+        # In the end, return decision
+        # return None if no decision was reached. That will trigger the normal decision making function
+        # Expect this method to grow very long as we make the code more complex. A lot of interactions will be contained here.
+        return None
+
+    def decision(self):
+        # This should run soft max and return the spectator's next action
+        total = 0
+        softmax = []
+        for key in self.preferences.keys():
+            val = np.e ** self.preferences[key]
+            softmax.append([key, val])
+            total += val
+        choice = random.randint(0, int(total) - 1)
+        total = 0
+        for decision in softmax:
+            total += decision[1]
+            if choice < total:
+                return decision[0]
+
+    def run(self):
+        while True:
+            # First we should be checking things like relationships that may force our decision
+            decision = self.forcedDecisions()
+            if decision is None:
+                decision = self.decision()
+            if decision == 'dance':
+                didIDoTheThing = self.goDance()
+                if didIDoTheThing:
+                    time.sleep(5)
+                # The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
+                # This can affect our preferences. If we didnt do the thing (we dont like the music, we were rejected, whatever), we will inevitably grow angrier + other effects
+                # This mean action functions shoudl return wether or not we were successful
+            elif decision == 'eat':
+                didIDoTheThing = self.goEat()
+            elif decision == 'flirt':
+                didIDoTheThing = self.goFlirt()
+            # ETC
+            # At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
+
+    def goDance(self):
+        if isinstance(self.location, Stage):
+            if self.location.music == self.attributes['musicHate']:
+                return False
+            else:
+                return True
+        else:
+            for stage in self.locationList['stages']:
+                if stage.music == self.attributes['musicFave']:
+                    self.location.sendTo(self, stage)
+                    return True
+            stage = random.choice(self.locationList['stages'])
+            self.location.sendTo(self, stage)
+            return True
+
+    def goEat(self):
+        if self.inventory['food'] == 0:
+            # If we have no food, go buy some
+            # I'm still working on how to choose the closest decision or how to manage paths
+            target = random.choice(self.locationList['foodCarts'])
+            self.location.sendTo(self, target)
+            # foodCart not implemented, so this is a draft
+            food = random.choice(list(self.location.menu.keys()))
+            if self.location.menu[food]['price'] > self.inventory['money']:
+                return False
+            else:
+                self.inventory['food'] += self.location.purchase(self, food)
+        while self.inventory['food'] > 0 and self.preferences['hunger'] > 0:
+            time.sleep(1)
+            self.inventory['food'] -= 1
+            self.preferences['hunger'] -= 1
+        return True
