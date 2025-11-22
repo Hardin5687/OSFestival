@@ -175,3 +175,12 @@ class Spectator(threading.Thread):
         self.location.interactions.append({'type': 'flirt', 'initiator': self, 'target': target})
         print(f"{self.attributes['ID']} flirts with {target.attributes['ID']}")
         return True
+    
+    def goBathroom(self):
+        target = random.choice(self.locationList['bathrooms'])
+        self.location.sendTo(self, target)
+        success = target.useBathroom(self)
+        if success:
+            self.preferences['bathroom'] = 0
+        return success
+
