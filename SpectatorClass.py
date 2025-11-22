@@ -151,3 +151,27 @@ class Spectator(threading.Thread):
             self.inventory['food'] -= 1
             self.preferences['hunger'] -= 1
         return True
+    
+    def goFight(self):
+        for interaction in self.location.interactions:
+          if interaction['type'] == 'fight' and self in interaction['participants']:
+              return True
+        # If false we look for a random 
+        if self.location.states['fighting']['list']:
+            opponent = random.choice(self.location.states['fighting']['list'])
+            interaction = {
+                'type': 'fight',
+                'participants': [self, opponent]
+            }
+            self.location.interactions.append(interaction)
+            return True
+        return False   
+    
+    def goFlirt(self):
+        candidates = [s for s in self.location.states['all']['list'] if s != self]
+        if not candidates:
+            return False
+        target = random.choice(candidates)
+        self.location.interactions.append({'type': 'flirt', 'initiator': self, 'target': target})
+        print(f"{self.attributes['ID']} flirts with {target.attributes['ID']}")
+        return True
