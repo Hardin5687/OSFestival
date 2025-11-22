@@ -1,194 +1,121 @@
-{
- "cells": [
-  {
-   "cell_type": "markdown",
-   "id": "fe64dfc9",
-   "metadata": {},
-   "source": [
-    "Location Class\n"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "9a11aeca",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import threading"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "3faab8f9",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "class Location:\n",
-    "  def __init__(self):\n",
-    "    #Here go the lists and locks of the location\n",
-    "    #Pay attention to the structure. The dictionary makes adding or removing new lists easier\n",
-    "    #Wasted, drugged, etc will be referred to as 'states'\n",
-    "    self.neighbours=[]\n",
-    "    self.states={\n",
-    "        'all':{'list':[], 'lock':threading.Lock()},\n",
-    "        'wasted':{'list':[], 'lock':threading.Lock()},\n",
-    "        'drugged':{'list':[], 'lock':threading.Lock()},\n",
-    "        'fighting':{'list':[], 'lock':threading.Lock()}\n",
-    "    }\n",
-    "\n",
-    "  def addState(self, spectator, state):\n",
-    "    #Give a spectator a state\n",
-    "    #Returns True if the spectator is still at location, False if not, None if there was an error\n",
-    "    #Same holds for other methods\n",
-    "    if state in self.states.keys():\n",
-    "      with self.states['all']['lock']:\n",
-    "        if spectator not in self.states['all']['list']:\n",
-    "          #Keep in mind return breaks out of the function\n",
-    "          return False\n",
-    "      with self.states[state]['lock']:\n",
-    "        self.states[state]['list'].append(spectator)\n",
-    "        return True\n",
-    "    else:\n",
-    "      print(f\"State {state} was requested but doesn't exist\")\n",
-    "      return None\n",
-    "\n",
-    "  def removeState(self, spectator, state):\n",
-    "    #Remove a spectator's state\n",
-    "    if state in self.states.keys():\n",
-    "      with self.states[state]['lock']:\n",
-    "        if spectator not in self.states[state]['list']:\n",
-    "          return False\n",
-    "        else:\n",
-    "          self.states[state]['list'].remove(spectator)\n",
-    "          return True\n",
-    "    else:\n",
-    "      print(f\"State {state} was requested but doesn't exist\")\n",
-    "      return None\n",
-    "\n",
-    "  def checkStates(self, spectator):\n",
-    "    #Returns a list of all states of an spectator\n",
-    "    #Removed spectator in 'all' check\n",
-    "    #Should 'all' be returned?\n",
-    "    #Might need revision\n",
-    "    states=[]\n",
-    "    for state in self.states.keys():\n",
-    "      if state=='all':\n",
-    "        continue\n",
-    "      with self.states[state]['lock']:\n",
-    "        if spectator in self.states[state]['list']:\n",
-    "          states.append(state)\n",
-    "    return states\n",
-    "\n",
-    "  def getStateList(self, state='all'):\n",
-    "    #Returns the list of all spectators that have a specific state\n",
-    "    if state not in self.states.keys():\n",
-    "      print(f\"State {state} was requested but doesn't exist\")\n",
-    "      return None\n",
-    "    else:\n",
-    "      with self.states[state]['lock']:\n",
-    "        return self.states[state]['list']\n",
-    "\n",
-    "  def sendTo(self, spectator, target):\n",
-    "    #Sends an spectator to a neighbour location\n",
-    "    #Does it need to be a neighbour?\n",
-    "    with self.states['all']['lock']:\n",
-    "      if spectator not in self.states['all']['list']:\n",
-    "        return False\n",
-    "      else:\n",
-    "        states=self.checkStates(spectator)\n",
-    "        for state in states:\n",
-    "          self.removeState(spectator, state)\n",
-    "        target.receive(spectator, states)\n",
-    "        return True\n",
-    "\n",
-    "  def receive(self, spectator, states=[]):\n",
-    "    #Receives an spectator from another location\n",
-    "    states = ['all'] + states\n",
-    "    for state in states:\n",
-    "      if state in self.states.keys():\n",
-    "        with self.states[state]['lock']:\n",
-    "          self.states[state]['list'].append(spectator)"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "9d320448",
-   "metadata": {},
-   "source": [
-    "Spectator Class"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "604def77",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import threading\n",
-    "import time\n",
-    "import random"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "1ba666d7",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "class Spectator(threading.Thread):\n",
-    "    def __init__(self, id, state, location):\n",
-    "        #define what the customer is\n",
-    "        threading.Thread.__init__(self)\n",
-    "        self.id = id\n",
-    "        self.budget = 0\n",
-    "        self.hunger = 0\n",
-    "        self.location = None\n",
-    "    def state_aquired(self, state):\n",
-    "        #we are going to give to the spectator a random state from the possible states\n",
-    "        self.state = {\n",
-    "            'drunkness': {\"sober\":0, \"tipsy\":1, \"drunk\":2, \"wasted\":3},\n",
-    "            'drugs' : {\"none\":0, \"weed\":1, \"coke\":2, \"mdma\":3},\n",
-    "            'flirting' : {\"none\":0, \"looking\":1, \"approaching\":2, \"dancing\":3},\n",
-    "            'music_taste': {\"pop\":0, \"rock\":1, \"rap\":2, \"techno\":3}\n",
-    "            }\n",
-    "        state_choice = random.choice(list(state[state].keys()))\n",
-    "        if state == 'drunkness':\n",
-    "            self.drunkness = state_choice\n",
-    "        elif state == 'drugs':\n",
-    "            self.drugs = state_choice\n",
-    "        elif state == 'flirting':\n",
-    "            self.flirting = state_choice\n",
-    "        else:\n",
-    "            self.music_taste = state_choice \n",
-    "    def fixed_values(self):\n",
-    "        self.budget = random.randint(50, 200)\n",
-    "        self.hunger = random.randint(0, 100)\n"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.13.7"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+import threading
+import random
+
+
+class Location:
+    def __init__(self):
+        # Here go the lists and locks of the location
+        # Pay attention to the structure. The dictionary makes adding or removing new lists easier
+        # Wasted, drugged, etc will be referred to as 'states'
+        self.neighbours = []
+        self.states = {
+            'all': {'list': [], 'lock': threading.Lock()},
+            'wasted': {'list': [], 'lock': threading.Lock()},
+            'drugged': {'list': [], 'lock': threading.Lock()},
+            'fighting': {'list': [], 'lock': threading.Lock()}
+        }
+
+    def addState(self, spectator, state):
+        # Give a spectator a state
+        # Returns True if the spectator is still at location, False if not, None if there was an error
+        # Same holds for other methods
+        if state in self.states.keys():
+            with self.states['all']['lock']:
+                if spectator not in self.states['all']['list']:
+                    # Keep in mind return breaks out of the function
+                    return False
+            with self.states[state]['lock']:
+                self.states[state]['list'].append(spectator)
+            return True
+        else:
+            print(f"State {state} was requested but doesn't exist")
+            return None
+
+    def removeState(self, spectator, state):
+        # Remove a spectator's state
+        if state in self.states.keys():
+            with self.states[state]['lock']:
+                if spectator not in self.states[state]['list']:
+                    return False
+                else:
+                    self.states[state]['list'].remove(spectator)
+                    return True
+        else:
+            print(f"State {state} was requested but doesn't exist")
+            return None
+
+    def checkStates(self, spectator):
+        # Returns a list of all states of an spectator
+        # Removed spectator in 'all' check
+        # Should 'all' be returned?
+        # Might need revision
+        states = []
+        for state in self.states.keys():
+            if state == 'all':
+                continue
+            with self.states[state]['lock']:
+                if spectator in self.states[state]['list']:
+                    states.append(state)
+        return states
+
+    def getStateList(self, state='all'):
+        # Returns the list of all spectators that have a specific state
+        if state not in self.states.keys():
+            print(f"State {state} was requested but doesn't exist")
+            return None
+        else:
+            with self.states[state]['lock']:
+                return self.states[state]['list']
+
+    def sendTo(self, spectator, target):
+        # Sends an spectator to a neighbour location
+        # Does it need to be a neighbour?
+        with self.states['all']['lock']:
+            if spectator not in self.states['all']['list']:
+                return False
+            else:
+                states = self.checkStates(spectator)
+                for state in states:
+                    self.removeState(spectator, state)
+                target.receive(spectator, states)
+                return True
+
+    def receive(self, spectator, states=[]):
+        # Receives an spectator from another location
+        states = ['all'] + states
+        for state in states:
+            if state in self.states.keys():
+                with self.states[state]['lock']:
+                    self.states[state]['list'].append(spectator)
+
+
+class Spectator(threading.Thread):
+    def __init__(self, id, state, location):
+        # define what the customer is
+        threading.Thread.__init__(self)
+        self.id = id
+        self.budget = 0
+        self.hunger = 0
+        self.location = None
+
+    def state_aquired(self, state):
+        # we are going to give to the spectator a random state from the possible states
+        self.state = {
+            'drunkness': {"sober": 0, "tipsy": 1, "drunk": 2, "wasted": 3},
+            'drugs': {"none": 0, "weed": 1, "coke": 2, "mdma": 3},
+            'flirting': {"none": 0, "looking": 1, "approaching": 2, "dancing": 3},
+            'music_taste': {"pop": 0, "rock": 1, "rap": 2, "techno": 3},
+        }
+        state_choice = random.choice(list(self.state[state].keys()))
+        if state == 'drunkness':
+            self.drunkness = state_choice
+        elif state == 'drugs':
+            self.drugs = state_choice
+        elif state == 'flirting':
+            self.flirting = state_choice
+        else:
+            self.music_taste = state_choice
+
+    def fixed_values(self):
+        self.budget = random.randint(50, 200)
+        self.hunger = random.randint(0, 100)
