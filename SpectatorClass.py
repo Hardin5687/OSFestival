@@ -1,18 +1,4 @@
 {
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": []
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
-    }
-  },
   "cells": [
     {
       "cell_type": "code",
@@ -30,18 +16,23 @@
     },
     {
       "cell_type": "code",
-      "source": [
-        "class Stage():\n",
-        "  pass"
-      ],
+      "execution_count": 4,
       "metadata": {
         "id": "fghW5Wy8I6jz"
       },
-      "execution_count": 4,
-      "outputs": []
+      "outputs": [],
+      "source": [
+        "class Stage():\n",
+        "  pass"
+      ]
     },
     {
       "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "ZRg7aK_weefA"
+      },
+      "outputs": [],
       "source": [
         "personalities = {\n",
         "    #A dictionary of archetypes. Different personalities prefer different things\n",
@@ -81,6 +72,22 @@
         "    }\n",
         "\n",
         "  def forcedDecisions(self):\n",
+        "    #First method: IF I have a partner and someone is flirting with them, fight them\n",
+        "    for relation in self.relationships:\n",
+        "      if relation['type']=='partner':\n",
+        "        for interaction in self.location.interactions:\n",
+        "          if interaction['type']=='flirt' and interaction['target']==relation['person']:\n",
+        "            return 'fight'\n",
+        "    #Second method: IF I am already in a fight, keep fighting\n",
+        "    for interaction in self.location.interactions:\n",
+        "      if interaction['type']=='fight' and interaction['participants'].__contains__(self):\n",
+        "        return 'fight'\n",
+        "    #Third method: IF my favorite music is playing, I have a high chance to dance\n",
+        "    if type(self.location) == Stage:\n",
+        "      if self.location.music == self.attributes['musicFave']:\n",
+        "        if random.randint(1,10)>3: #70% chance to dance if favorite music is playing\n",
+        "          return 'dance'  \n",
+        "  \n",
         "    #This method will check mandatory decisions. Examples:\n",
         "    #If someone is flirting with my partner, fight them\n",
         "    #If I am already in a fight, keep fighting\n",
@@ -157,12 +164,21 @@
         "      self.inventory['food']-=1\n",
         "      self.preferences['hunger']-=1\n",
         "    return True\n"
-      ],
-      "metadata": {
-        "id": "ZRg7aK_weefA"
-      },
-      "execution_count": null,
-      "outputs": []
+      ]
     }
-  ]
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
 }
