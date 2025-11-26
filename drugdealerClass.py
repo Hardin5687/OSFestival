@@ -33,14 +33,14 @@ class DrugDealer:
 
             # Process sale
             spectator.inventory['money'] -= price
-            spectator.inventory['drugs'] += 1
+            spectator.inventory['drugs'] += 1 #track which drug it was bought?
             self.inventory[drug]['stock'] -= 1
             self.cash += price
 
             print(f"{self.name} sold {drug} to {spectator.attributes['ID']} for ${price}.")
             return True
 
-    def restock(self):
+    def restock(self): #include inventory and have a thread and check 
         # Dealer restocks all drugs
         with self.lock:
             for drug in self.inventory:

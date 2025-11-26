@@ -21,7 +21,7 @@ class Bathroom:
                 with self.state[state]['lock']:
                     self.state[state]['list'].append(spectator) 
     
-    def useBathroom(self, spectator):
+    def useBathroom(self, spectator): #add time.sleep
         # Spectator tries to use the bathroom
         with self.states['occupied']['lock']:
             if len(self.states['occupied']['list']) < self.capacity:
