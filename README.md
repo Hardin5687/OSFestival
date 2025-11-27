@@ -39,3 +39,40 @@ None have been started but they are not a priority
 * Artists class
 
 main function sets clock and initializes threads. Is there a better way to manage the clock?
+
+
+New todo list 
+
+Dictionary of the way an action affects the probability:
+if you have a dictionary the key (decision) has another dictionary for how the state changes
+ex: I drink alcohol --> it is going to increase flirtness and decrease hunger (fixed state changes)
+
+inherit for special locations and other classes inherit classes from location
+
+New classes: 
+- artist class
+- stages: VIP, normal etc
+- review security
+- nurse (dummy location to regenerate)
+- health bar for many things
+- once location and spectator --> enhance every other special class
+
+artist class: 
+- how good he is
+- initializes: type of music, skill, probability to drink/drugs, health bar 
+
+work on the flirting/fighting mechanism --> how it will end 
+flirting: based on if it has a partner, on flirting probability
+fighting: 3 ways to win fight: 1. how many friends you have 2. %of fighting 3. if you are optimally drunk
+fighting can also end if security comes in
+
+How to buy and sell alcohol:
+- location: add bars and add alcohol to foodcarts
+- method to buy alcohol
+
+
+bathroom --> you can drink water too
+
+multiple days --> figure out later
+
+Report and Presentation

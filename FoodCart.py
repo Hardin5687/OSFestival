@@ -42,6 +42,7 @@ class FoodCart:
             # Perform purchase
             spectator.inventory['money'] -= price
             self.menu[item]['stock'] -= 1
+            time.sleep(random.uniform(0.5, 4))  # Simulate time taken to process purchase
             print(f"{spectator.attributes['ID']} bought {item} for ${price}. Remaining money: ${spectator.inventory['money']}.")
             return 1  # Returns 1 unit of food
     
