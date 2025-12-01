@@ -7,11 +7,10 @@ musicStyles = ['rock', 'reggaeton', 'techno', 'pop', 'hiphop', 'jazz']
 
 
 class Artist(threading.Thread):
-    def __init__(self, artist_id, skill, genre, prob_drink=0.3, prob_drugs=0.1):
+    def __init__(self, artist_id, skill, MusicStyle, prob_drink=0.3, prob_drugs=0.1):
         super().__init__()
         self.id = artist_id
         self.skill = skill
-        self.genre = genre          # THIS IS THE MUSIC TYPE
         self.prob_drink = prob_drink
         self.prob_drugs = prob_drugs
         self.health = 100
