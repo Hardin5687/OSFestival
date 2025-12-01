@@ -33,7 +33,7 @@ class Spectator(threading.Thread):
                         }
         self.location = None
         self.relationships=[]
-        self.interactions=[]
+        self.interactions=None
         self.preferences={ #A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.
                           'dance':5,
                           'hunger':random.randint(1, 3),
@@ -44,6 +44,7 @@ class Spectator(threading.Thread):
                           'drug':personality['drug'],
                           'bathroom':0
                           }
+        self.targetLocation=None
 
     def forcedDecisions(self):
         #This method will check mandatory decisions. Examples:
@@ -53,10 +54,27 @@ class Spectator(threading.Thread):
         #In the end, return decision
         #return None if no decision was reached. That will trigger the normal decision making function
         #Expect this method to grow very long as we make the code more complex. A lot of interactions will be contained here.
+        if self.targetLocation != None:
+            Search(spectator=self, request=[self.targetLocation], start=self.location)
+            self.targetLocation=None
+        if len(self.relationships)==1:
+            if self.relationships[0].location == self.location:
+                if self.relationships[0].interactions != None:
+                    target = self.relationships[0].interactions
+                    self.relationships[0].interactions = None
+                    return 'fight', target
+        if len(self.relationships)>1:
+            if self.relationships[0].location == self.location:
+                if self.relationships[0].interactions != None:
+                    if random.randint(1, 2)==1:
+                        target = self.relationships[0].interactions
+                        self.relationships[0].interactions = None
+                        return 'fight', target
         if type(self.location)==Stage:
-            if random.randint(1, 2)==1:
-                return 'dance'
-        return None
+            if self.location.music == self.attributes['musicFave']:
+                if random.randint(1, 2)==1:
+                    return 'dance', None
+        return None, None
 
     def decision(self):
     #This should run soft max and return the spectator's next action
@@ -76,7 +94,7 @@ class Spectator(threading.Thread):
     def run(self):
         while True:
             #First we should be checking things like relationships that may force our decision
-            decision = self.forcedDecisions()
+            decision, target = self.forcedDecisions()
             if decision == None:
                 decision = self.decision()
             if decision == 'dance':
@@ -126,8 +144,13 @@ class Spectator(threading.Thread):
             for stage in self.locationList['stages']:
                 if stage.music == self.attributes['musicFave']:
                     Search(spectator=self, request=[stage], start=self.location)
+                    for friend in self.relationships:
+                        friend.targetLocation=self.location
+                    time.sleep(5)
                     return True
             Search(spectator=self, request=self.locationList['stages'], start=self.location)
+            for friend in self.relationships:
+                friend.targetLocation=self.location
             time.sleep(5)
             return True
 
@@ -149,12 +172,12 @@ class Spectator(threading.Thread):
             self.preferences['hunger']-=1
         return True
 
-    def goFight(self):
-        target = random.choice([s for s in self.location.states['all']['list'] if s != self])
+    def goFight(self, target = None):
+        if target == None:
+            target = random.choice([s for s in self.location.states['all']['list'] if s != self])
         # Mark fighting state
         self.location.addState(self, 'fighting')
         self.location.addState(target, 'fighting')
-
         self.is_fighting = True
         target.is_fighting = True
 
@@ -245,56 +268,25 @@ class Spectator(threading.Thread):
     def goFlirt(self):
         # Get all available people in the same location except myself
         people = [s for s in self.location.states['all']['list'] if s != self]
-
         if not people:
-            return False  # nobody to flirt with
-
-        # Choose someone randomly
-        target = random.choice(people)
-
-        # -----------------------------------------
-        # 1. DETERMINE TARGET'S RELATIONSHIP STATUS
-        # -----------------------------------------
-        # 0 → alone
-        # 1 → partner
-        # >1 → friend group
-
-        relation_count = len(target.relationships)
-
-        # --- Case 1: Flirting with someone who has a partner ---
-        if relation_count == 1:
-            partner = target.relationships[0]
-            print(f"{self.attributes['ID']} flirts with {target.attributes['ID']} who has a partner → fight!")
-            self.goFight(partner)
-            return True
-
-        # --- Case 2: Flirting with someone in a friend group ---
-        if relation_count > 1:
-            # Friend group reacts more aggressively
-            print(f"{self.attributes['ID']} tries flirting with {target.attributes['ID']} in a FRIEND GROUP!")
-            # 40% chance group gets upset, causing a fight with a random friend
-            if random.random() < 0.40:
-                group_member = random.choice(target.relationships)
-                print(f"Friend group doesn't like it → fight with {group_member.attributes['ID']}")
-                self.goFight(group_member)
-                return True
-            # Otherwise just a normal flirt
-            # Continue below
-
-        # -----------------------------------------
-        # 2. NORMAL FLIRT ATTEMPT (probability)
-        # -----------------------------------------
-        flirt_probability = self.preferences['flirt'] / 10  # 0–1 chance
-
-        if random.random() < flirt_probability:
-            print(f"{self.attributes['ID']} successfully flirts with {target.attributes['ID']}")
-            return True
-        else:
-            print(f"{self.attributes['ID']} fails to flirt with {target.attributes['ID']}")
             return False
-
-        
-            
+        target = random.choice(people)
+        if target.interactions==None:
+            self.interactions=target
+            target.interactions=self
+        else:
+            return False
+        time.sleep(5)
+        if self.interactions==target:
+            self.interactions = None
+            target.interactions = None
+            if random.randint(0, 5) < target.preferences['flirt']:
+                print(f"{self.attributes['ID']} successfully flirts with {target.attributes['ID']}")
+                return True
+            else:
+                print(f"{self.attributes['ID']} fails to flirt with {target.attributes['ID']}")
+                return False
+     
             
     def goBathroom(self):
         # Move to the nearest bathroom

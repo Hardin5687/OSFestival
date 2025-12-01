@@ -9,6 +9,9 @@ class Search:
         self.startSearch(start)
     
     def startSearch(self, start):
+        #This is a breadth first search
+        #It gets the nearest location that fulfills requirements and the path to it
+        #Then it starts the movement sequence
         if start in self.request:
             return
         while len(self.pending)>0:
