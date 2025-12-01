@@ -85,9 +85,9 @@ class Location:
                     self.removeState(spectator, state)
         with self.queues['lock']:
                     self.queues[path[0]].append(spectator)
-        time.sleep(0.5)
+        time.sleep(0.1)
         while self.queues[path[0]][0] != spectator:
-            time.sleep(0.5)
+            time.sleep(0.1)
             continue
         with self.queues['lock']:
              self.queues[path[0]].pop(0)

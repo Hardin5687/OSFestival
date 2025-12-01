@@ -13,7 +13,7 @@ class Search:
             return
         while len(self.pending)>0:
             l = self.pending.pop(0)
-            location, path = l[0], [1]
+            location, path = l[0], l[1]
             if location in self.request:
                 start.sendTo(self.spectator, path)
                 break
