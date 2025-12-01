@@ -1,4 +1,3 @@
-#bathroom class
 import threading
 import random
 import time
@@ -8,35 +7,45 @@ class Bathroom:
         self.name = name
         self.capacity = capacity
         self.state = {
-            'all': {'list' : [], 'lock' : threading.Lock() },
-            'occupied': {'list' : [], 'lock' : threading.Lock()},
-            'waiting': {'list' : [], 'lock' : threading.Lock() }
+            'all': {'list': [], 'lock': threading.Lock()},
+            'occupied': {'list': [], 'lock': threading.Lock()},
+            'waiting': {'list': [], 'lock': threading.Lock()}
         }
 
-    def receive(self, spectator, states = []):
-    #Receive a spectator into the bathroom's tracking system
+    def receive(self, spectator, states=[]):
+        # Track spectators inside the bathroom
         states = ['all'] + states
         for state in states:
-            if state in self.state.keys():
+            if state in self.state:
                 with self.state[state]['lock']:
-                    self.state[state]['list'].append(spectator) 
-    
-    def useBathroom(self, spectator): #add time.sleep
-        # Spectator tries to use the bathroom
-        with self.states['occupied']['lock']:
-            if len(self.states['occupied']['list']) < self.capacity:
-                self.states['occupied']['list'].append(spectator)
+                    self.state[state]['list'].append(spectator)
+
+    def useBathroom(self, spectator):
+        # Try to use a bathroom stall
+        with self.state['occupied']['lock']:
+            if len(self.state['occupied']['list']) < self.capacity:
+                self.state['occupied']['list'].append(spectator)
                 print(f"{spectator.attributes['ID']} entered {self.name}.")
                 time.sleep(random.randint(1, 3))  # simulate bathroom use
-                self.states['occupied']['list'].remove(spectator)
+
+                # optional: spectator can drink water
+                self.drinkWater(spectator)
+
+                self.state['occupied']['list'].remove(spectator)
                 print(f"{spectator.attributes['ID']} left {self.name}.")
                 return True
+
             else:
-                with self.states['waiting']['lock']:
-                    self.states['waiting']['list'].append(spectator)
+                with self.state['waiting']['lock']:
+                    self.state['waiting']['list'].append(spectator)
                     print(f"{spectator.attributes['ID']} is waiting for {self.name}.")
                     return False
+
+    def drinkWater(self, spectator):
+        print(f"{spectator.attributes['ID']} drinks water at {self.name}.")
+        spectator.preferences['thirst'] = 0
+
+
     def freeSpot(self):
-        # Check if a spot is available
-        with self.states['occupied']['lock']:
-            return len(self.states['occupied']['list']) < self.capacity
+        with self.state['occupied']['lock']:
+            return len(self.state['occupied']['list']) < self.capacity
