@@ -122,9 +122,10 @@ class Spectator(threading.Thread):
         else:
             for stage in self.locationList['stages']:
                 if stage.music == self.attributes['musicFave']:
+                    Search(spectator=self, request=[stage], start=self.location)
                     return True
-            stage = random.choice(self.locationList['stages'])
-            self.location.sendTo(self, stage)
+            Search(spectator=self, request=self.locationList['stages'], start=self.location)
+            time.sleep(5)
             return True
 
     def goEat(self):
