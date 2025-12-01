@@ -4,7 +4,7 @@ import time
 import numpy as np
 from Search import Search
 
-from stageClass import Stage
+from StageClass import Stage
 from FoodCart import FoodCart
 
 
