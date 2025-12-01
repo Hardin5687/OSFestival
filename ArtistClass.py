@@ -2,6 +2,10 @@ import threading
 import random
 import time
 
+musicStyles = ['rock', 'reggaeton', 'techno', 'pop', 'hiphop', 'jazz']
+
+
+
 class Artist(threading.Thread):
     def __init__(self, artist_id, skill, genre, prob_drink=0.3, prob_drugs=0.1):
         super().__init__()

@@ -6,10 +6,11 @@ class SecurityGuard(threading.Thread):
     def __init__(self, ID, locations, nurse_location, exit_location):
         super().__init__()
         self.ID = ID
-        self.locations = locations              # list of Location objects
+        self.locations = locations
         self.nurse_location = nurse_location
         self.exit_location = exit_location
         self.active = True
+        self.nurse_history = {}   # NEW — track who goes to nurse
 
     def run(self):
         # Simple patrol loop
@@ -66,6 +67,20 @@ class SecurityGuard(threading.Thread):
 
     # ESCORT HELPERS
     def escort_to_nurse(self, spectator, location):
+
+        # Track visits to nurse
+        if spectator not in self.nurse_history:
+            self.nurse_history[spectator] = 0
+
+        self.nurse_history[spectator] += 1
+
+        # Kick out if sent twice
+        if self.nurse_history[spectator] >= 2:
+            print(f"[Security {self.ID}] {spectator.attributes['ID']} sent to nurse twice → KICKING OUT.")
+            self.escort_out(spectator, location)
+            return
+
+        # Normal nurse escort
         success = location.sendTo(spectator, self.nurse_location)
         if success:
             print(f"[Security {self.ID}] Delivered {spectator.attributes['ID']} to Nurse Tent")

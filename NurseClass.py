@@ -23,10 +23,6 @@ class Nurse:
         spectator.location = self
 
     def heal(self, spectator):
-        """
-        Heals the spectator from being wasted/drugged.
-        Security will send spectators here.
-        """
 
         print(f"Nurse: Treating {spectator.attributes['ID']}...")
 
@@ -46,12 +42,11 @@ class Nurse:
 
         # Reset intoxication levels if your Spectator has them
         if hasattr(spectator, "drunkness"):
-            spectator.drunkness = 0
-
+            spectator.drunkness -= 1
         if hasattr(spectator, "drug_level"):
-            spectator.drug_level = 0
+            spectator.drug_level -= 1
 
-        print(f"Nurse: {spectator.attributes['ID']} is now stable and can return to the festival.")
+        print(f"Nurse: {spectator.attributes['ID']} is better and can return to the festival.")
 
         # Remove from healing list
         with self.states['healing']['lock']:
