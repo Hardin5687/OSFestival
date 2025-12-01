@@ -1,7 +1,7 @@
 # Libraries
 import threading
 # import random
-# import time
+import time
 
 
 # Location class
@@ -11,6 +11,7 @@ class Location:
         # Pay attention to the structure. The dictionary makes adding or removing new lists easier
         # Wasted, drugged, etc will be referred to as 'states'
         self.neighbours = []
+        self.queues = {'lock':threading.Lock()}
         self.states = {
             'all': {'list': [], 'lock': threading.Lock()},
             'wasted': {'list': [], 'lock': threading.Lock()},
@@ -82,8 +83,16 @@ class Location:
                     return False
                 for state in states:
                     self.removeState(spectator, state)
-                path[0].receive(spectator, states, path[1:])
-                return True
+        with self.queues['lock']:
+                    self.queues[path[0]].append(spectator)
+        time.sleep(0.5)
+        while self.queues[path[0]][0] != spectator:
+            time.sleep(0.5)
+            continue
+        with self.queues['lock']:
+             self.queues[path[0]].pop(0)
+        path[0].receive(spectator, states, path[1:])
+        return True
 
     def receive(self, spectator, states, path):
         # Receives an spectator from another location
