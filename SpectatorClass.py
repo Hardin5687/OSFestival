@@ -53,6 +53,9 @@ class Spectator(threading.Thread):
         #In the end, return decision
         #return None if no decision was reached. That will trigger the normal decision making function
         #Expect this method to grow very long as we make the code more complex. A lot of interactions will be contained here.
+        if type(self.location)==Stage:
+            if random.randint(1, 2)==1:
+                return 'dance'
         return None
 
     def decision(self):
