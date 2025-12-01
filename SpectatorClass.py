@@ -2,6 +2,7 @@ import threading
 import random
 import time
 import numpy as np
+from Search import Search
 
 from stageClass import Stage
 
@@ -19,7 +20,9 @@ class Spectator(threading.Thread):
         self.attributes={ #A dictionary of attributes that are NOT weights for decision making
                          'musicFave':personality['musicFave'],
                          'musicHate':personality['musicHate'],
-                         'ID':ID
+                         'ID':ID,
+                         'health':100,
+                         'fun':50
                          }
         self.inventory={ #A dictionary of things the spectator has. If they already have food, when they get hungry they won't need to go elsewhere to buy it
                         'food':0,
@@ -75,17 +78,40 @@ class Spectator(threading.Thread):
                 decision = self.decision()
             if decision == 'dance':
                 didIDoTheThing = self.goDance()
-            if didIDoTheThing:
-                time.sleep(5)
             #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
             #This can affect our preferences. If we didnt do the thing (we dont like the music, we were rejected, whatever), we will inevitably grow angrier + other effects
             #This mean action functions shoudl return wether or not we were successful
-            elif decision == 'eat':
+            elif decision == 'hunger':
                 didIDoTheThing = self.goEat()
             elif decision == 'flirt':
                 didIDoTheThing = self.goFlirt()
+            elif decision == 'fight':
+                didIDoTheThing = self.goFight()
+            elif decision == 'thirst':
+                didIDoTheThing = self.goWater()
+            elif decision == 'alcohol':
+                didIDoTheThing = self.goAlcohol()
+            elif decision == 'drug':
+                didIDoTheThing = self.goDrugs()
+            elif decision == 'bathroom':
+                didIDoTheThing = self.goBathroom()
             #ETC
             #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
+            self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
+    
+    def updatePreferences(self, decision, didIDoTheThing):
+        updateList = {
+            'dance': {
+                True: {'fun':10, 'dance':-1, 'hunger':1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
+                False: {'fun':-10, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
+                }
+            }
+        update = updateList[decision][didIDoTheThing]
+        for key in update.keys():
+            if key in self.attributes.keys():
+                self.attributes[key]+=update[key]
+            else:
+                self.preferences[key]+=update[key]
 
     def goDance(self):
         if type(self.location) == Stage:
@@ -96,7 +122,6 @@ class Spectator(threading.Thread):
         else:
             for stage in self.locationList['stages']:
                 if stage.music == self.attributes['musicFave']:
-                    self.location.sendTo(self, stage)
                     return True
             stage = random.choice(self.locationList['stages'])
             self.location.sendTo(self, stage)
@@ -181,4 +206,17 @@ class Spectator(threading.Thread):
   
 
     def goFlirt(self):
-        self    
+        pass
+    
+    def goBathroom(self):
+        pass
+    
+    def goWater(self):
+        pass
+    
+    def goAlcohol(self):
+        pass
+    
+    def goDrugs(self):
+        pass
+    
