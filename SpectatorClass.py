@@ -61,24 +61,25 @@ class Spectator(threading.Thread):
                           'bathroom':0
                           }
         self.targetLocation=None
+        self.is_fighting=False
 
     def forcedDecisions(self):
-        #This method will check mandatory decisions. Examples:
-        #If someone is flirting with my partner, fight them
-        #If I am already in a fight, keep fighting
-        #If my favorite music is playing, I have a high chance to dance
-        #In the end, return decision
-        #return None if no decision was reached. That will trigger the normal decision making function
-        #Expect this method to grow very long as we make the code more complex. A lot of interactions will be contained here.
+        #If someone fought me and I won, I update
+        if self.is_fighting!=True and self.is_fighting!=False:
+            self.updatePreferences('fight', True if self.is_fighting=='winner' else False)
+            self.is_fighting=False
+        #If my group has moved elsewhere, I follow them
         if self.targetLocation != None:
             Search(spectator=self, request=[self.targetLocation], start=self.location)
             self.targetLocation=None
+        #If someone is flirting with my partner, I fight them
         if len(self.relationships)==1:
             if self.relationships[0].location == self.location:
                 if self.relationships[0].interactions != None:
                     target = self.relationships[0].interactions
                     self.relationships[0].interactions = None
                     return 'fight', target
+        #If someone is flirting with my friend, I might get angry
         if len(self.relationships)>1:
             if self.relationships[0].location == self.location:
                 if self.relationships[0].interactions != None:
@@ -86,6 +87,7 @@ class Spectator(threading.Thread):
                         target = self.relationships[0].interactions
                         self.relationships[0].interactions = None
                         return 'fight', target
+        #If my favourite music is playing, I will probably dance
         if type(self.location)==Stage:
             if self.location.music == self.attributes['musicFave']:
                 if random.randint(1, 2)==1:
@@ -205,39 +207,25 @@ class Spectator(threading.Thread):
             if len(s.relationships) > 1:
                 friends = len(s.relationships) 
             else:
-                friends = 0    
-
+                friends = 0
             anger = s.preferences['fight']
-            drunkness = 0  # To be implemented later
+            if hasattr(self, 'drunkness'):
+                drunkness = self.drunkness
+            else:
+                drunkness = 0  # To be implemented later
             return anger + drunkness + friends
 
         my_power = fight_power(self)
         target_power = fight_power(target)
 
-        #determine winner
-        if my_power > target_power:
-            winner = self
-            loser = target
-        elif target_power > my_power:
-            winner = target
-            loser = self
-        else: #in case of tie, random winner
-            if random.randint(0,1) == 0:
-                winner = self
-                loser = target
-            else:
-                winner = target
-                loser = self
         # Proportional chances
         total_power = my_power + target_power
         my_chance = my_power / total_power
-        target_chance = target_power / total_power
 
         # Fight simulation (up to 5 seconds)
         fight_time = 5.0
         step = 0.2
         elapsed = 0
-
         self_score = 0
         target_score = 0
 
@@ -258,9 +246,7 @@ class Spectator(threading.Thread):
             time.sleep(step)
 
         # Determine winner by total score
- 
         print(f"Fight scores → {self.attributes['ID']}: {self_score}, {target.attributes['ID']}: {target_score}")
-
         if self_score > target_score:
             winner, loser = self, target
         elif target_score > self_score:
@@ -269,16 +255,16 @@ class Spectator(threading.Thread):
             # Perfect tie → random winner
             winner = random.choice([self, target])
             loser = target if winner is self else self
-
         print(f"Fight resolved → Winner: {winner.attributes['ID']}  Loser: {loser.attributes['ID']}")
-
         # Remove fighting state
         self.location.removeState(self, 'fighting')
         self.location.removeState(target, 'fighting')
         self.is_fighting = False
-        target.is_fighting = False
-
-        return True
+        target.is_fighting = 'winner' if winner==target else 'loser'
+        if winner == self:
+            return True
+        else:
+            return False
 
 
     def goFlirt(self):
@@ -298,10 +284,15 @@ class Spectator(threading.Thread):
             target.interactions = None
             if random.randint(0, 5) < target.preferences['flirt']:
                 print(f"{self.attributes['ID']} successfully flirts with {target.attributes['ID']}")
+                if target.relationships==[] and self.relationships==[]:
+                    target.relationships.append(self)
+                    self.relationships.append(target)
                 return True
             else:
                 print(f"{self.attributes['ID']} fails to flirt with {target.attributes['ID']}")
                 return False
+        else:
+            return False
      
             
     def goBathroom(self):
