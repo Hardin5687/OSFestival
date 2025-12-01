@@ -214,20 +214,6 @@ class Spectator(threading.Thread):
         my_power = fight_power(self)
         target_power = fight_power(target)
 
-        #determine winner
-        if my_power > target_power:
-            winner = self
-            loser = target
-        elif target_power > my_power:
-            winner = target
-            loser = self
-        else: #in case of tie, random winner
-            if random.randint(0,1) == 0:
-                winner = self
-                loser = target
-            else:
-                winner = target
-                loser = self
         # Proportional chances
         total_power = my_power + target_power
         my_chance = my_power / total_power
