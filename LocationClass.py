@@ -70,7 +70,7 @@ class Location:
             with self.states[state]['lock']:
                 return self.states[state]['list']
 
-    def sendTo(self, spectator, target):
+    def sendTo(self, spectator, path, states=[]):
         # Sends an spectator to a neighbour location
         # Does it need to be a neighbour?
         with self.states['all']['lock']:
@@ -78,37 +78,21 @@ class Location:
                 return False
             else:
                 states = self.checkStates(spectator)
+                if 'fighting' in states:
+                    return False
                 for state in states:
                     self.removeState(spectator, state)
-                target.receive(spectator, states)
+                path[0].receive(spectator, states, path[1:])
                 return True
 
-    def receive(self, spectator, states=[]):
+    def receive(self, spectator, states, path):
         # Receives an spectator from another location
-        states = ['all'] + states
-        for state in states:
-            if state in self.states.keys():
-                with self.states[state]['lock']:
-                    self.states[state]['list'].append(spectator)
+        if path==[]:
+            states = ['all'] + states
+            for state in states:
+                if state in self.states.keys():
+                    with self.states[state]['lock']:
+                        self.states[state]['list'].append(spectator)
+        else:
+            self.sendTo(spectator, path, states)
 
-
-# Examples of the Location class in action
-stage1 = Location()
-stage1.receive('John')
-stage1.receive('Peter')
-print(stage1.getStateList())
-
-stage1.addState('John', 'wasted')
-print(stage1.getStateList('wasted'))
-print(stage1.checkStates('John'))
-
-stage1.removeState('John', 'wasted')
-print(stage1.getStateList('wasted'))
-print(stage1.checkStates('John'))
-
-stage2 = Location()
-stage2.receive('Mary')
-stage2.addState('Mary', 'wasted')
-stage2.sendTo('Mary', stage1)
-print(stage1.getStateList('wasted'))
-print(stage1.checkStates('Mary'))
