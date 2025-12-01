@@ -120,9 +120,65 @@ class Spectator(threading.Thread):
             self.preferences['hunger']-=1
         return True
 
-    def goFight(self):
-        pass
+    def goFight(self,target):
+        #we add both spectators to fighting state in case security needs to break it up
+        self.location.addState(self, 'fighting')
+        self.location.addState(target, 'fighting')
+        #we will check if the fight gets interrupted by security here
+        # Flags for interruption
+        self.is_fighting = True
+        target.is_fighting = True
+
+        print(f"{self.attributes['ID']} starts fighting {target.attributes['ID']}!")
+
+        # Fight lasts up to 5 seconds, but can be interrupted
+        fight_duration = 5.0
+        step = 0.1
+        waited = 0.0
+
+        # Check every 100ms if security broke the fight
+        while waited < fight_duration:
+            # If security removed fighting state → break up
+            if not self.is_fighting or not target.is_fighting:
+                print(f"Fight between {self.attributes['ID']} and {target.attributes['ID']} was broken up by security.")
+                return False  # fight ended early
+
+            time.sleep(step)
+            waited += step
+
+        # If we reach here → fight was NOT interrupted → resolve normally
+
+        #Fight logic here  
+        def fight_power(s):
+            # We have 3 variables that determine fight power: anger level, drunkness, and size of friend group
+            #check friend group size
+            if len(s.relationships) > 1:
+                friends = len(s.relationships)
+            else: #if the friend group is 0 or 1, we consider it as alone or with a partner 
+                friends = 0
+            anger = s.preferences['fight']
+            drunkness = 0   #once we implement we will add 
+            return anger + drunkness + friends
+        
+        my_power = fight_power(self)
+        target_power = fight_power(target)
+
+        #determine winner
+        if my_power > target_power:
+            winner = self
+            loser = target
+        elif target_power > my_power:
+            winner = target
+            loser = self
+        else: #in case of tie, random winner
+            if random.randint(0,1) == 0:
+                winner = self
+                loser = target
+            else:
+                winner = target
+                loser = self
   
   
 
-``   def goFlirt(self):
+    def goFlirt(self):
+        self    
