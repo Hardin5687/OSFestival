@@ -203,8 +203,7 @@ class Spectator(threading.Thread):
             else:
                 winner = target
                 loser = self
-  
-
+    
     def goFlirt(self):
         pass
     
