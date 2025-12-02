@@ -124,7 +124,7 @@ class Spectator(threading.Thread):
                 didIDoTheThing = self.goEat()
             elif decision == 'flirt':
                 didIDoTheThing = self.goFlirt()
-            elif decision == 'fight':
+            elif decision == 'fight':   
                 didIDoTheThing = self.goFight()
             elif decision == 'thirst':
                 didIDoTheThing = self.goWater()
@@ -212,7 +212,7 @@ class Spectator(threading.Thread):
             if hasattr(self, 'drunkness'):
                 drunkness = self.drunkness
             else:
-                drunkness = 0  # To be implemented later
+                drunkness = 0  
             return anger + drunkness + friends
 
         my_power = fight_power(self)
