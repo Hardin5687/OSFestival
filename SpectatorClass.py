@@ -67,7 +67,6 @@ class Spectator(threading.Thread):
         if self.attributes['fun']<=0:
             return 'exit', None
         if self.attributes['health']<=0:
-            print(f'{self.attributes["ID"]} fucking dies and goes to nurse')
             return 'nurse', None
         #If my group has moved elsewhere, I follow them
         if self.targetLocation != None:
@@ -112,7 +111,7 @@ class Spectator(threading.Thread):
                 return decision[0]
 
     def run(self):
-        while True:
+        while self.is_active:
             time.sleep(1)
             #First we should be checking things like relationships that may force our decision
             decision, target = self.forcedDecisions()
@@ -145,6 +144,8 @@ class Spectator(threading.Thread):
                         friend.targetLocation=self.location
                     didIDoTheThing=True
                 else:
+                    print(f'{self.attributes["ID"]} fucking dies')
+                    break
                     didIDoTheThing=False
             elif decision == 'exit':
                 if target:
@@ -164,7 +165,7 @@ class Spectator(threading.Thread):
     def updatePreferences(self, decision, didIDoTheThing):
         updateList = {
             'dance': {
-                True: {'fun':20, 'dance':-1, 'hunger':1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
+                True: {'fun':0, 'dance':-1, 'hunger':1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
                 False: {'fun':-20, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
                 },
             'hunger': {
@@ -204,9 +205,10 @@ class Spectator(threading.Thread):
     
     def goDance(self):
         if type(self.location) == Stage:
-            if self.location.music == self.attributes['musicHate']:
+            if self.location.music == self.attributes['musicHate'] or self.location.music==None:
                 return False
             else:
+                self.attributes['fun']+=self.location.quality
                 return True
         else:
             for stage in self.locationList['stages']:
@@ -216,7 +218,11 @@ class Spectator(threading.Thread):
                         for friend in self.relationships:
                             friend.targetLocation=self.location
                         time.sleep(5)
-                        return True
+                        if self.location.music==None:
+                            return False
+                        else:
+                            self.attributes['fun']+=self.location.quality
+                            return True
                     else:
                         return False                
             Search(spectator=self, request=self.locationList['stages'], start=self.location)
@@ -224,6 +230,7 @@ class Spectator(threading.Thread):
                 for friend in self.relationships:
                     friend.targetLocation=self.location
                 time.sleep(5)
+                
                 return True
             else:
                 return False

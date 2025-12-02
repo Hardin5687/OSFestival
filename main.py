@@ -7,6 +7,7 @@ from FoodCart import FoodCart
 from drugdealerClass import DrugDealer
 from securityguardcorrect import SecurityGuard
 from Clock import Clock
+from ArtistClass import Artist
 
 import random
 import time
@@ -30,6 +31,9 @@ personalities = {
     'loner':{'flirt':1, 'fight':2, 'alcohol':1, 'drug':2, 'musicFave':'jazz', 'musicHate':'techno', 'moneyMax':100, 'moneyMin':30},
     'musician':{'flirt':4, 'fight':2, 'alcohol':3, 'drug':3, 'musicFave':'jazz', 'musicHate':'pop', 'moneyMax':180, 'moneyMin':60}
 }
+
+musicStyles = ['rock', 'reggaeton', 'techno', 'pop', 'hiphop', 'jazz']
+
 def main():
     # Stages (3)
     stage1 = Stage("Stage 1")
@@ -106,6 +110,10 @@ def main():
     ]
     for guard in security:
         guard.start()
+    
+    for genre in musicStyles:
+        artist = Artist(f'{genre}', random.randint(5, 10), genre, locationList)
+        artist.start()
     
     ID=1
     while clock.getTime() < 0.5:

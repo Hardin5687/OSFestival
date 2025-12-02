@@ -5,7 +5,8 @@ class Stage(Location):
     def __init__(self, name=None):
         super().__init__()
         self.name = name
-        self.music = None  # Artist will set this
+        self.music = None
+        self.quality=0
         self.states['dancing']={'list': [], 'lock': threading.Lock()}
 
     def setMusic(self, genre):

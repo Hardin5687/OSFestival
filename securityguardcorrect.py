@@ -47,9 +47,6 @@ class SecurityGuard(threading.Thread):
         else:
             print(f"Security {self.ID} Issues warning to {spectator.attributes['ID']}")
 
-    # -----------------------------------------
-    # 2. Handle wasted spectators
-    # -----------------------------------------
     def handle_wasted(self, location):
         wasted = location.getStateList("wasted")
         if not wasted:
@@ -59,9 +56,6 @@ class SecurityGuard(threading.Thread):
                 print(f"Security {self.ID} Assists wasted spectator {s.attributes['ID']}")
                 self.escort_to_nurse(s, location)
 
-    # -----------------------------------------
-    # 3. Handle drugged spectators
-    # -----------------------------------------
     def handle_drugged(self, location):
         drugged = location.getStateList("drugged")
         if not drugged:
@@ -71,10 +65,7 @@ class SecurityGuard(threading.Thread):
             if random.random() < 0.2:
                 print(f"Security {self.ID} DRUG EMERGENCY — {s.attributes['ID']}")
                 self.escort_to_nurse(s, location)
-
-    # -----------------------------------------
-    # ESCORT HELPERS
-    # -----------------------------------------
+                
     def escort_to_nurse(self, spectator, location):
 
         # Track how many times this spectator was sent to nurse
@@ -112,7 +103,10 @@ class SecurityGuard(threading.Thread):
         if spectator.location in self.locationList['exits']:
             print(f"Security {self.ID} Removes {spectator.attributes['ID']} from festival")
             # LOG THE EVENT
-            metrics.log_security_event("kicked_out", spectator.attributes['ID'], self.ID)
+            try:
+                metrics.log_security_event("kicked_out", spectator.attributes['ID'], self.ID)
+            except:
+                pass
             spectator.is_active = False
         else:
             print(f"Security {self.ID} Failed to escort {spectator.attributes['ID']} out")
