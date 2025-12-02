@@ -24,6 +24,6 @@ class Search:
                 continue
             else:
                 self.visited.append(location)
-                for neigh in location.neighbours():
+                for neigh in location.neighbours:
                     self.pending.append((neigh, path+[neigh]))
                     

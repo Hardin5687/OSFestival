@@ -7,33 +7,10 @@ from Search import Search
 from StageClass import Stage
 from FoodCart import FoodCart
 
-
-personalities = {
-    #A dictionary of archetypes. Different personalities prefer different things
-    ['averageJoe']:{'flirt':3, 'fight':3, 'alcohol':3, 'drug':3, 'musicFave':None, 'musicHate':None, 'moneyMax':150, 'moneyMin':50},
-    ['drunk']:{'flirt':4, 'fight':4, 'alcohol':5, 'drug':3, 'musicFave':'rock', 'musicHate':'jazz', 'moneyMax':100, 'moneyMin':10},
-    ['punk']:{'flirt':3, 'fight':4, 'alcohol':3, 'drug':4, 'musicFave':'rock', 'musicHate':'jazz', 'moneyMax':140, 'moneyMin':40},
-    ['junkie']:{'flirt':2, 'fight':3, 'alcohol':3, 'drug':5, 'musicFave':'techno', 'musicHate':'pop', 'moneyMax':80, 'moneyMin':0},
-    ['hipster']:{'flirt':3, 'fight':2, 'alcohol':2, 'drug':3, 'musicFave':'hiphop', 'musicHate':'techno', 'moneyMax':170, 'moneyMin':60},
-    ['businessman']:{'flirt':2, 'fight':2, 'alcohol':3, 'drug':1, 'musicFave':'pop', 'musicHate':'rock', 'moneyMax':400, 'moneyMin':200},
-    ['artist']:{'flirt':4, 'fight':2, 'alcohol':3, 'drug':4, 'musicFave':'jazz', 'musicHate':'pop', 'moneyMax':180, 'moneyMin':50},
-    ['goth']:{'flirt':2, 'fight':3, 'alcohol':3, 'drug':2, 'musicFave':'rock', 'musicHate':'pop', 'moneyMax':120, 'moneyMin':40},
-    ['romantic']:{'flirt':5, 'fight':3, 'alcohol':2, 'drug':1, 'musicFave':'pop', 'musicHate':'rock', 'moneyMax':160, 'moneyMin':60},
-    ['rebel']:{'flirt':4, 'fight':4, 'alcohol':4, 'drug':4, 'musicFave':'rock', 'musicHate':'classical', 'moneyMax':130, 'moneyMin':30},
-    ['gamer']:{'flirt':2, 'fight':2, 'alcohol':2, 'drug':2, 'musicFave':'techno', 'musicHate':'jazz', 'moneyMax':170, 'moneyMin':70},
-    ['intellectual']:{'flirt':2, 'fight':1, 'alcohol':2, 'drug':1, 'musicFave':'jazz', 'musicHate':'reggaeton', 'moneyMax':250, 'moneyMin':100},
-    ['stoner']:{'flirt':3, 'fight':2, 'alcohol':2, 'drug':5, 'musicFave':'hiphop', 'musicHate':'techno', 'moneyMax':120, 'moneyMin':20},
-    ['partyAnimal']:{'flirt':5, 'fight':3, 'alcohol':5, 'drug':4, 'musicFave':'reggaeton', 'musicHate':'rock', 'moneyMax':220, 'moneyMin':40},
-    ['loner']:{'flirt':1, 'fight':2, 'alcohol':1, 'drug':2, 'musicFave':'jazz', 'musicHate':'techno', 'moneyMax':100, 'moneyMin':20},
-    ['musician']:{'flirt':4, 'fight':2, 'alcohol':3, 'drug':3, 'musicFave':'jazz', 'musicHate':'pop', 'moneyMax':180, 'moneyMin':60}
-}
-
-
-#locations will be a dictionary of all locations by their types
-
 class Spectator(threading.Thread):
-    def __init__(self, ID, personality, locations:dict):
+    def __init__(self, ID, personality, locations:dict, clock):
         super().__init__()
+        self.clock=clock
         self.locationList=locations
         self.attributes={ #A dictionary of attributes that are NOT weights for decision making
                          'musicFave':personality['musicFave'],
@@ -68,6 +45,13 @@ class Spectator(threading.Thread):
         if self.is_fighting!=True and self.is_fighting!=False:
             self.updatePreferences('fight', True if self.is_fighting=='winner' else False)
             self.is_fighting=False
+        #If someone is fighting me or flirting with me, wait until it ends
+        while self.is_fighting or self.interactions!=None:
+            time.sleep(0.1)
+            continue
+        #If my group left, I leave
+        if self.targetLocation in self.locationList['exits']:
+            return 'exit', True
         #If my group has moved elsewhere, I follow them
         if self.targetLocation != None:
             Search(spectator=self, request=[self.targetLocation], start=self.location)
@@ -102,7 +86,8 @@ class Spectator(threading.Thread):
             val=np.e**self.preferences[key]
             softmax.append([key, val])
             total+=val
-        choice=random.randint(range(total))
+        softmax.append(['exit', self.clock.getTime()-self.attributes['fun']/100]-self.attributes['health']/100)
+        choice=random.randrange(0, total)
         total=0
         for decision in softmax:
             total+=decision[1]
@@ -134,7 +119,14 @@ class Spectator(threading.Thread):
                 didIDoTheThing = self.goDrugs()
             elif decision == 'bathroom':
                 didIDoTheThing = self.goBathroom()
-            #ETC
+            elif decision == 'exit':
+                if target:
+                    Search(self, self.targetLocation, self.location)
+                else:
+                    Search(self, self.locationList['exits'], self.location)
+                    for friend in self.relationships:
+                        friend.targetLocation=self.location
+                break
             #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
             self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
     
@@ -151,7 +143,7 @@ class Spectator(threading.Thread):
                 self.attributes[key]+=update[key]
             else:
                 self.preferences[key]+=update[key]
-
+    
     def goDance(self):
         if type(self.location) == Stage:
             if self.location.music == self.attributes['musicHate']:
@@ -192,7 +184,10 @@ class Spectator(threading.Thread):
 
     def goFight(self, target = None):
         if target == None:
-            target = random.choice([s for s in self.location.states['all']['list'] if s != self])
+            targets = [s for s in self.location.states['all']['list'] if s != self]
+            if targets == []:
+                return False
+            target = random.choice(targets)
         # Mark fighting state
         self.location.addState(self, 'fighting')
         self.location.addState(target, 'fighting')
@@ -287,6 +282,7 @@ class Spectator(threading.Thread):
                 if target.relationships==[] and self.relationships==[]:
                     target.relationships.append(self)
                     self.relationships.append(target)
+                time.sleep(5) #Woohoo
                 return True
             else:
                 print(f"{self.attributes['ID']} fails to flirt with {target.attributes['ID']}")

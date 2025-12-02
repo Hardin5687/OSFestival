@@ -3,9 +3,11 @@
 import threading
 import time
 import random
+from LocationClass import Location
 
-class FoodCart: #spectator.inventory I do 
-    def __init__(self,name):
+class FoodCart(Location): #spectator.inventory I do 
+    def __init__(self,name=None):
+        super().__init__()
         self.name = name
         self.menu = {
             #food item: price, stock
@@ -22,18 +24,8 @@ class FoodCart: #spectator.inventory I do
             'water': {'price': 2, 'stock': 500}
         }
         self.lock  = threading.Lock()
-        self.states = {
-            'all': {'list': [], 'lock': threading.Lock()},
-            'eating': {'list': [], 'lock': threading.Lock()}
-        }
-    def receive(self, spectator, states=[]):
-        # Receives a spectator from another location
-        states = ['all'] + states
-        for state in states:
-            if state in self.states.keys():
-                with self.states[state]['lock']:
-                    self.states[state]['list'].append(spectator)
-    
+        self.states['eating'] = {'list': [], 'lock': threading.Lock()}
+
     def purchase(self, spectator, item):
         # Spectator tries to buy an item from the menu
         with self.lock:

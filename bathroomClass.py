@@ -1,24 +1,15 @@
 import threading
 import random
 import time
+from LocationClass import Location
 
-class Bathroom: 
+class Bathroom(Location): 
     def __init__(self, name, capacity = 3):
+        super().__init__()
         self.name = name
         self.capacity = capacity
-        self.state = {
-            'all': {'list': [], 'lock': threading.Lock()},
-            'occupied': {'list': [], 'lock': threading.Lock()},
-            'waiting': {'list': [], 'lock': threading.Lock()}
-        }
-
-    def receive(self, spectator, states=[]):
-        # Track spectators inside the bathroom
-        states = ['all'] + states
-        for state in states:
-            if state in self.state:
-                with self.state[state]['lock']:
-                    self.state[state]['list'].append(spectator)
+        self.state['occupied'] = {'list': [], 'lock': threading.Lock()}
+        self.state['waiting'] = {'list': [], 'lock': threading.Lock()}
 
     def useBathroom(self, spectator):
         # Try to use a bathroom stall

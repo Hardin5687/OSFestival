@@ -2,9 +2,8 @@ import threading
 import random
 import time
 
-
 class DrugDealer:
-    def __init__(self, name, location):
+    def __init__(self, location, name=None):
         self.name = name
         self.location = location   # Dealers stay in a fixed location
         self.inventory = {         # THIS is the inventory

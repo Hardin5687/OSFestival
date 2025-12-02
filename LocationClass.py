@@ -18,7 +18,12 @@ class Location:
             'drugged': {'list': [], 'lock': threading.Lock()},
             'fighting': {'list': [], 'lock': threading.Lock()}
         }
-
+        
+    def makeNeighbours(self, neighbour):
+        if neighbour not in self.neighbours:
+            self.neighbours.append(neighbour)
+            neighbour.makeNeighbours(self)
+        
     def addState(self, spectator, state):
         # Give a spectator a state
         # Returns True if the spectator is still at location, False if not, None if there was an error
