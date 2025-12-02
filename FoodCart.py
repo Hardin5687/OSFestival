@@ -4,6 +4,7 @@ import threading
 import time
 import random
 from LocationClass import Location
+from global_metrics import metrics   
 
 class FoodCart(Location): #spectator.inventory I do 
     def __init__(self,name=None):
@@ -12,9 +13,9 @@ class FoodCart(Location): #spectator.inventory I do
         self.menu = {
             #food item: price, stock
             'burger': {'price': 10, 'stock': 50,'satiety':3},
-            'fries': {'price': 3, 'stock': 100},
-            'hotdog': {'price': 7, 'stock': 80},
-            'sandwich': {'price': 5, 'stock': 60},
+            'fries': {'price': 3, 'stock': 100,'satiety':10},
+            'hotdog': {'price': 7, 'stock': 80,'satiety':2},
+            'sandwich': {'price': 5, 'stock': 60,'satiety':3},
             #alcoholic beverages
             'beer': {'price': 6, 'stock': 200},
             'wine': {'price': 12, 'stock': 150},
@@ -48,7 +49,10 @@ class FoodCart(Location): #spectator.inventory I do
                 spectator.inventory['food'] += self.menu[item]['satiety']
             elif item in ['water']:
                 spectator.inventory['water'] += 1
+            #record the sale in metrics
+            metrics.log_sale(item, price, spectator.attributes['ID'])
             return 1  # Successfully purchased
+
     
     def restock(self, item, amount):
         # Refill stock for an item
