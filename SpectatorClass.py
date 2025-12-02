@@ -67,7 +67,7 @@ class Spectator(threading.Thread):
         if self.attributes['fun']<=0:
             return 'exit', None
         if self.attributes['health']<=0:
-            print(f'{self.ID} fucking dies and goes to nurse')
+            print(f'{self.attributes["ID"]} fucking dies and goes to nurse')
             return 'nurse', None
         #If my group has moved elsewhere, I follow them
         if self.targetLocation != None:
