@@ -17,7 +17,8 @@ class Location:
             'all': {'list': [], 'lock': threading.Lock()},
             'wasted': {'list': [], 'lock': threading.Lock()},
             'drugged': {'list': [], 'lock': threading.Lock()},
-            'fighting': {'list': [], 'lock': threading.Lock()}
+            'fighting': {'list': [], 'lock': threading.Lock()},
+            'healing': {'list': [], 'lock': threading.Lock()}
         }
         
     def makeNeighbours(self, neighbour):
