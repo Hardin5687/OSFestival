@@ -16,11 +16,13 @@ class Bathroom(Location):
 
     def useBathroom(self, spectator):
 
-        # Try to enter stall
+        start_time = time.time()   # Track wait time
+
+        # === TRY TO ENTER IMMEDIATELY ===
         with self.states['occupied']['lock']:
             if len(self.states['occupied']['list']) < self.capacity:
 
-                # If spectator was waiting, remove them
+                # Remove from waiting if already waiting
                 with self.states['waiting']['lock']:
                     if spectator in self.states['waiting']['list']:
                         self.states['waiting']['list'].remove(spectator)
@@ -28,23 +30,32 @@ class Bathroom(Location):
                 self.states['occupied']['list'].append(spectator)
                 print(f"{spectator.attributes['ID']} entered {self.name}.")
 
+                # They got in immediately → wait time = 0
+                metrics.log_bathroom_wait(
+                    spectator.attributes['ID'],
+                    0
+                )
+
                 time.sleep(random.randint(1, 3))
 
                 self.drinkWater(spectator)
-
                 self.states['occupied']['list'].remove(spectator)
                 print(f"{spectator.attributes['ID']} left {self.name}.")
                 return True
 
-        # Bathroom full → add to waiting
+        # === BATHROOM FULL → WAITING ===
         with self.states['waiting']['lock']:
             self.states['waiting']['list'].append(spectator)
             print(f"{spectator.attributes['ID']} is waiting for {self.name}.")
 
-        # Log attempted wait (no actual queue measurement)
-        metrics.log_bathroom_wait(spectator.attributes['ID'], 0)
+        # spectator is waiting → log first wait event
+        metrics.log_bathroom_wait(
+            spectator.attributes['ID'],
+            0
+        )
 
         return False
+
 
     def drinkWater(self, spectator):
         print(f"{spectator.attributes['ID']} drinks water at {self.name}.")

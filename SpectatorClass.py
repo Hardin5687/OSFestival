@@ -204,36 +204,56 @@ class Spectator(threading.Thread):
                 self.preferences[key]+=update[key]
     
     def goDance(self):
-        if type(self.location) == Stage:
-            if self.location.music == self.attributes['musicHate'] or self.location.music==None:
+        # CASE 1 — We are at a Stage
+        if isinstance(self.location, Stage):
+
+            # Stage has no music → can't dance now
+            if getattr(self.location, "music", None) is None:
                 return False
-            else:
-                self.attributes['fun']+=self.location.quality
-                return True
-        else:
-            for stage in self.locationList['stages']:
-                if stage.music == self.attributes['musicFave']:
-                    Search(spectator=self, request=[stage], start=self.location)
-                    if self.location in self.locationList['stages']:
-                        for friend in self.relationships:
-                            friend.targetLocation=self.location
-                        time.sleep(5)
-                        if self.location.music==None:
-                            return False
-                        else:
-                            self.attributes['fun']+=self.location.quality
-                            return True
-                    else:
-                        return False                
-            Search(spectator=self, request=self.locationList['stages'], start=self.location)
-            if self.location in self.locationList['stages']:
-                for friend in self.relationships:
-                    friend.targetLocation=self.location
-                time.sleep(5)
-                
-                return True
-            else:
+
+            # Music we hate → skip
+            if self.location.music == self.attributes['musicHate']:
                 return False
+
+            # Dance success → increase fun based on stage quality (if exists)
+            quality = getattr(self.location, "quality", 1)
+            self.attributes['fun'] += quality
+            return True
+
+        # CASE 2 — We are NOT at a stage → we should walk to one
+        # First: try to go to our favorite music if any stage matches
+        for stage in self.locationList['stages']:
+            if stage.music == self.attributes['musicFave'] and stage.music is not None:
+                Search(self, request=[stage], start=self.location)
+                if self.location == stage:
+                    for friend in self.relationships:
+                        friend.targetLocation = self.location
+                    time.sleep(5)
+
+                    # If no music once we arrive → fail
+                    if stage.music is None:
+                        return False
+
+                    quality = getattr(stage, "quality", 1)
+                    self.attributes['fun'] += quality
+                    return True
+                else:
+                    return False
+
+        # CASE 3 — No fave available → go to ANY stage
+        Search(self, request=self.locationList['stages'], start=self.location)
+        if self.location in self.locationList['stages']:
+            for friend in self.relationships:
+                friend.targetLocation = self.location
+            time.sleep(5)
+
+            # no quality? assume 1
+            quality = getattr(self.location, "quality", 1)
+            self.attributes['fun'] += quality
+            return True
+
+        return False
+
 
     def goEat(self):
         if self.inventory['food']==0:
@@ -492,7 +512,9 @@ class Spectator(threading.Thread):
         # If we are NOT at the dealer's location → walk there
         if self.location != dealer_location:
             Search(spectator=self, request=[dealer_location], start=self.location)
-            if not self.location in self.locationList['dealers']:
+
+            # ❗ FIXED: we must check if we reached the dealer's STAGE
+            if self.location != dealer_location:
                 return False
 
         # Choose drug type from dealer inventory

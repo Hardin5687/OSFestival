@@ -1,29 +1,40 @@
-
-
 class Search:
     def __init__(self, spectator, request, start):
-        self.spectator=spectator
-        self.request=request
-        self.visited=[]
-        self.pending=[(start, [])]
-        self.startSearch(start)
-    
-    def startSearch(self, start):
-        #This is a breadth first search
-        #It gets the nearest location that fulfills requirements and the path to it
-        #Then it starts the movement sequence
-        if start in self.request:
-            return
-        while len(self.pending)>0:
-            l = self.pending.pop(0)
-            location, path = l[0], l[1]
-            if location in self.request:
-                return start.sendTo(self.spectator, path)
-                break
-            elif location in self.visited:
+        self.spectator = spectator
+        self.request = request
+        self.start = start
+
+        self.run()
+
+    def run(self):
+        # If already at destination → do nothing (but return True so caller knows)
+        if self.start in self.request:
+            return True
+
+        # BFS
+        from collections import deque
+        queue = deque()
+        queue.append((self.start, []))
+        visited = set()
+
+        while queue:
+            current, path = queue.popleft()
+
+            if current in visited:
                 continue
-            else:
-                self.visited.append(location)
-                for neigh in location.neighbours:
-                    self.pending.append((neigh, path+[neigh]))
-                    
+            visited.add(current)
+
+            # Found target
+            if current in self.request:
+                # Send spectator along the path
+                # IMPORTANT: path includes next locations in correct order
+                current.sendTo(self.spectator, path, [])
+                return True
+
+            # Expand neighbors
+            for neigh in current.neighbours:
+                if neigh not in visited:
+                    queue.append((neigh, path + [neigh]))
+
+        # No path found
+        return False

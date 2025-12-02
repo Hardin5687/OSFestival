@@ -8,6 +8,7 @@ from drugdealerClass import DrugDealer
 from securityguardcorrect import SecurityGuard
 from Clock import Clock
 from ArtistClass import Artist
+from global_metrics import metrics
 
 import random
 import time
@@ -51,8 +52,10 @@ def main():
     # Nurse tents (2)
     nurse1 = NurseTent("Nurse Tent A")
     nurse2 = NurseTent("Nurse Tent B")
-    
+
+    # Exit gate (plain Location)
     gate = Location()
+    gate.name = "Exit Gate"
 
     # Collect all for iteration
     all_locations = [
@@ -63,7 +66,9 @@ def main():
         gate
     ]
 
-    # Stages ↔ Food
+    # ------------------ NEIGHBOR GRAPH ------------------
+
+    # Stage <-> Food
     stage1.neighbours = [food1]
     stage2.neighbours = [food1, food2]
     stage3.neighbours = [food2]
@@ -71,24 +76,37 @@ def main():
     food1.neighbours = [stage1, stage2]
     food2.neighbours = [stage2, stage3]
 
-    # Bathrooms cluster A: all connected to food1 + nurse1
+    # Bathrooms cluster A (Bathroom A <-> Food1, Nurse1)
     bath1.makeNeighbours([food1, nurse1])
 
-    # Bathrooms cluster B: all connected to food2 + nurse2
+    # Bathrooms cluster B (Bathroom B <-> Food2, Nurse2)
     bath2.makeNeighbours([food2, nurse2])
 
-    # Nurse tents connected back to cluster roots + food
+    # Nurse tents
     nurse1.neighbours = [food1]
     nurse2.neighbours = [food2]
-    
-    gate.makeNeighbours([stage1, stage2, stage3])
 
+    # ❌ Removed incorrect: gate.makeNeighbours()
+    # DO NOT USE makeNeighbours() for exits
+
+    # ----------------- EXIT SETUP (CORRECT) -----------------
+
+    # Exit Gate -> Stages
+    gate.neighbours = [stage1, stage2, stage3]
+
+    # Stages -> Exit Gate  (bidirectional required!)
+    stage1.neighbours.append(gate)
+    stage2.neighbours.append(gate)
+    stage3.neighbours.append(gate)
+
+    # ------------------ DEALERS ------------------
     dealers = [
         DrugDealer(stage1, 'Johnny Navajas'),
         DrugDealer(stage2, 'Mia Falcone'),
         DrugDealer(stage3, 'Snake? Snaaaaaaake!')
     ]
 
+    # ------------------ LOCATION LIST ------------------
     locationList = {
         'stages': [stage1, stage2, stage3],
         'foodCarts': [food1, food2],
@@ -96,40 +114,61 @@ def main():
         'dealers': dealers,
         'nurse': [nurse1, nurse2],
         'all': all_locations,
-        'exits': [gate]  
+        'exits': [gate]
     }
-    
+
+    # ------------------ CLOCK ------------------
     clock = Clock()
-    
-    security=[
-    SecurityGuard([stage1], locationList, clock, name='James Bond'),
-    SecurityGuard([stage2], locationList, clock, name='Jason Bourne'),
-    SecurityGuard([stage3], locationList, clock, name='OS Teacher'),
-    SecurityGuard([food1, nurse1, bath1], locationList, clock, name='Big Boss'),
-    SecurityGuard([food2, nurse2, bath2], locationList, clock, name='Lieutenant Dan')
+
+    # ------------------ SECURITY GUARDS ------------------
+    security = [
+        SecurityGuard([stage1], locationList, clock, name='James Bond'),
+        SecurityGuard([stage2], locationList, clock, name='Jason Bourne'),
+        SecurityGuard([stage3], locationList, clock, name='OS Teacher'),
+        SecurityGuard([food1, nurse1, bath1], locationList, clock, name='Big Boss'),
+        SecurityGuard([food2, nurse2, bath2], locationList, clock, name='Lieutenant Dan')
     ]
     for guard in security:
         guard.start()
-    
+
+    # ------------------ ARTISTS ------------------
     for genre in musicStyles:
         artist = Artist(f'{genre}', random.randint(5, 10), genre, locationList)
         artist.start()
-    
-    ID=1
-    while clock.getTime() < 0.5:
+
+    # ------------------ SPECTATOR GENERATION ------------------
+    ID = 1
+    while clock.getTime() < 0.5:  # 30 seconds of spawning
         time.sleep(1)
-        size = random.randint(0, 4)%4
+        size = random.randint(0, 4) % 4  # group size 1–4
         group = []
-        start = random.choice(locationList['exits'])
-        for i in range(size+1):
-            group.append(Spectator(ID, random.choice(list(personalities.values())), locationList, start, clock))
-            ID+=1
+
+        start = random.choice(locationList['exits'])  # spawn at Exit Gate
+
+        for i in range(size + 1):
+            ticket_price = random.randint(50, 150)
+            metrics.log_ticket(ID, ticket_price)
+
+            sp = Spectator(
+                ID,
+                random.choice(list(personalities.values())),
+                locationList,
+                start,
+                clock
+            )
+            group.append(sp)
+            ID += 1
+
+        # Set friendships inside the group
         for sp in group:
             for friend in group:
-                if sp!=friend:
+                if sp != friend:
                     sp.relationships.append(friend)
+
+        # Start spectator threads
         for sp in group:
             sp.start()
+
 
 if __name__ == "__main__":
     main()

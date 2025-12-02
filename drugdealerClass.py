@@ -1,6 +1,7 @@
 import threading
 import random
 import time
+from global_metrics import metrics
 
 class DrugDealer:
     def __init__(self, location, name=None):
@@ -32,12 +33,23 @@ class DrugDealer:
 
             # Process sale
             spectator.inventory['money'] -= price
-            spectator.inventory['drugs'] += 1  # You can track drug types later
+            spectator.inventory['drugs'] += 1
             self.inventory[drug]['stock'] -= 1
             self.cash += price
 
             print(f"{self.name} sold {drug} to {spectator.attributes['ID']} for ${price}.")
+
+            # ⭐ NEW: log to SQLite
+            from global_metrics import metrics
+            metrics.log_drug_sale(
+                drug,
+                price,
+                self.name,
+                spectator.attributes['ID']
+            )
+
             return True
+
 
     def restock(self):
         with self.lock:
