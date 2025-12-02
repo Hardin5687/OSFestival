@@ -14,9 +14,9 @@ import time
 personalities = {
     #A dictionary of archetypes. Different personalities prefer different things
     'averageJoe':{'flirt':3, 'fight':3, 'alcohol':3, 'drug':3, 'musicFave':None, 'musicHate':None, 'moneyMax':150, 'moneyMin':50},
-    'drunk':{'flirt':4, 'fight':4, 'alcohol':5, 'drug':3, 'musicFave':'rock', 'musicHate':'jazz', 'moneyMax':100, 'moneyMin':10},
+    'drunk':{'flirt':4, 'fight':4, 'alcohol':5, 'drug':3, 'musicFave':'rock', 'musicHate':'jazz', 'moneyMax':100, 'moneyMin':30},
     'punk':{'flirt':3, 'fight':4, 'alcohol':3, 'drug':4, 'musicFave':'rock', 'musicHate':'jazz', 'moneyMax':140, 'moneyMin':40},
-    'junkie':{'flirt':2, 'fight':3, 'alcohol':3, 'drug':5, 'musicFave':'techno', 'musicHate':'pop', 'moneyMax':80, 'moneyMin':0},
+    'junkie':{'flirt':2, 'fight':3, 'alcohol':3, 'drug':5, 'musicFave':'techno', 'musicHate':'pop', 'moneyMax':80, 'moneyMin':30},
     'hipster':{'flirt':3, 'fight':2, 'alcohol':2, 'drug':3, 'musicFave':'hiphop', 'musicHate':'techno', 'moneyMax':170, 'moneyMin':60},
     'businessman':{'flirt':2, 'fight':2, 'alcohol':3, 'drug':1, 'musicFave':'pop', 'musicHate':'rock', 'moneyMax':400, 'moneyMin':200},
     'artist':{'flirt':4, 'fight':2, 'alcohol':3, 'drug':4, 'musicFave':'jazz', 'musicHate':'pop', 'moneyMax':180, 'moneyMin':50},
@@ -25,13 +25,11 @@ personalities = {
     'rebel':{'flirt':4, 'fight':4, 'alcohol':4, 'drug':4, 'musicFave':'rock', 'musicHate':'classical', 'moneyMax':130, 'moneyMin':30},
     'gamer':{'flirt':2, 'fight':2, 'alcohol':2, 'drug':2, 'musicFave':'techno', 'musicHate':'jazz', 'moneyMax':170, 'moneyMin':70},
     'intellectual':{'flirt':2, 'fight':1, 'alcohol':2, 'drug':1, 'musicFave':'jazz', 'musicHate':'reggaeton', 'moneyMax':250, 'moneyMin':100},
-    'stoner':{'flirt':3, 'fight':2, 'alcohol':2, 'drug':5, 'musicFave':'hiphop', 'musicHate':'techno', 'moneyMax':120, 'moneyMin':20},
+    'stoner':{'flirt':3, 'fight':2, 'alcohol':2, 'drug':5, 'musicFave':'hiphop', 'musicHate':'techno', 'moneyMax':120, 'moneyMin':30},
     'partyAnimal':{'flirt':5, 'fight':3, 'alcohol':5, 'drug':4, 'musicFave':'reggaeton', 'musicHate':'rock', 'moneyMax':220, 'moneyMin':40},
-    'loner':{'flirt':1, 'fight':2, 'alcohol':1, 'drug':2, 'musicFave':'jazz', 'musicHate':'techno', 'moneyMax':100, 'moneyMin':20},
+    'loner':{'flirt':1, 'fight':2, 'alcohol':1, 'drug':2, 'musicFave':'jazz', 'musicHate':'techno', 'moneyMax':100, 'moneyMin':30},
     'musician':{'flirt':4, 'fight':2, 'alcohol':3, 'drug':3, 'musicFave':'jazz', 'musicHate':'pop', 'moneyMax':180, 'moneyMin':60}
 }
-
-    
 def main():
  # ------------------------------------------------
     # 1. CREATE LOCATIONS WITH NAMES

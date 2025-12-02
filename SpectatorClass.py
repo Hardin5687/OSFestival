@@ -41,8 +41,17 @@ class Spectator(threading.Thread):
                           }
         self.targetLocation=None
         self.is_fighting=False
+        self.escorted=False
+        self.is_active=True
 
     def forcedDecisions(self):
+        if self.clock.getTime()>6:
+            return 'exit', None
+        while self.escorted:
+            time.sleep(0.1)
+            continue
+        if not self.is_active:
+            return 'exit', None
         #If someone fought me and I won, I update
         if self.is_fighting!=True and self.is_fighting!=False:
             self.updatePreferences('fight', True if self.is_fighting=='winner' else False)
@@ -54,6 +63,8 @@ class Spectator(threading.Thread):
         #If my group left, I leave
         if self.targetLocation in self.locationList['exits']:
             return 'exit', True
+        if self.attributes['fun']<=0:
+            return 'exit', None
         #If my group has moved elsewhere, I follow them
         if self.targetLocation != None:
             Search(spectator=self, request=[self.targetLocation], start=self.location)
@@ -97,8 +108,8 @@ class Spectator(threading.Thread):
                 return decision[0]
 
     def run(self):
-        print('start')
         while True:
+            time.sleep(1)
             #First we should be checking things like relationships that may force our decision
             decision, target = self.forcedDecisions()
             if decision == None:
@@ -125,7 +136,7 @@ class Spectator(threading.Thread):
                 didIDoTheThing = self.goBathroom()
             elif decision == 'exit':
                 if target:
-                    Search(self, self.targetLocation, self.location)
+                    Search(self, [self.targetLocation], self.location)
                 else:
                     Search(self, self.locationList['exits'], self.location)
                     for friend in self.relationships:
@@ -133,6 +144,7 @@ class Spectator(threading.Thread):
                 break
             #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
             self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
+        print(f'{self.attributes["ID"]} finished')
             
     def updatePreferences(self, decision, didIDoTheThing):
         updateList = {
@@ -141,28 +153,28 @@ class Spectator(threading.Thread):
                 False: {'fun':-20, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
                 },
             'hunger': {
-                True: {'fun':0, 'dance':1, 'hunger':-1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':1, 'drug':0, 'bathroom':1},
-                False: {'fun':0, 'dance':-1, 'hunger':1, 'thirst':0, 'flirt':-1, 'fight':1, 'alcohol':-1, 'drug':0, 'bathroom':0}
+                True: {'fun':5, 'dance':1, 'hunger':0, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':1, 'drug':0, 'bathroom':1},
+                False: {'fun':-10, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':-1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'flirt': {
-                True: {'fun':15, 'dance':1, 'hunger':0, 'thirst':1, 'flirt':-1, 'fight':-1, 'alcohol':1, 'drug':0, 'bathroom':0},
-                False: {'fun':-5, 'dance':-1, 'hunger':0, 'thirst':1, 'flirt':0, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
+                True: {'fun':30, 'dance':2, 'hunger':1, 'thirst':1, 'flirt':-1, 'fight':-2, 'alcohol':1, 'drug':0, 'bathroom':0},
+                False: {'fun':-10, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':0, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
                 },
             'fight': {
-                True: {'fun':-20, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':-1, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
-                False: {'fun':0, 'dance':1, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':1, 'bathroom':0}
+                True: {'fun':10, 'dance':1, 'hunger':1, 'thirst':1, 'flirt':1, 'fight':-1, 'alcohol':-1, 'drug':-1, 'bathroom':0},
+                False: {'fun':-20, 'dance':-2, 'hunger':1, 'thirst':1, 'flirt':-1, 'fight':0, 'alcohol':2, 'drug':1, 'bathroom':0}
                 },
             'thirst': {
-                True: {'fun':0, 'dance':0, 'hunger':0, 'thirst':-1, 'flirt':0, 'fight':0, 'alcohol':0, 'drug':0, 'bathroom':1},
-                False: {'fun':0, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':1, 'bathroom':0}
+                True: {'fun':0, 'dance':1, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':-1, 'alcohol':-1, 'drug':0, 'bathroom':1},
+                False: {'fun':0, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':0, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'alcohol': {
-                True: {'fun':25, 'dance':1, 'hunger':1, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':1, 'bathroom':0},
-                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':0, 'drug':1, 'bathroom':0}
+                True: {'fun':20, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0},
+                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'drug': {
-                True: {'fun':30, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':0, 'drug':-1, 'bathroom':0},
-                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':0, 'bathroom':0}
+                True: {'fun':20, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':0, 'alcohol':0, 'drug':-2, 'bathroom':0},
+                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'bathroom': {True:{}, False:{}}
             }
@@ -242,6 +254,8 @@ class Spectator(threading.Thread):
 
         # Proportional chances
         total_power = my_power + target_power
+        if total_power==0:
+            total_power=1
         my_chance = my_power / total_power
 
         # Fight simulation (up to 5 seconds)
@@ -255,6 +269,7 @@ class Spectator(threading.Thread):
             # Security interrupts fight
             if not self.is_fighting or not target.is_fighting:
                 print(f"Fight between {self.attributes['ID']} and {target.attributes['ID']} was stopped by security.")
+                self.is_fighting, target.is_fighting = False, False
                 return False
 
             # Each 0.2 seconds, both have a chance to get a point based on their power 

@@ -2,20 +2,20 @@ import threading
 import random
 import time
 from global_metrics import metrics
+from Search import Search
 
 
 class SecurityGuard(threading.Thread):
-    def __init__(self, ID, locations, nurse_location, exit_location):
+    def __init__(self, locations, locationList, clock, name=None):
         super().__init__()
-        self.ID = ID
+        self.ID = name
         self.locations = locations
-        self.nurse_location = nurse_location
-        self.exit_location = exit_location
+        self.locationList = locationList
         self.active = True
         self.nurse_history = {}   # track nurse visits
 
     def run(self):
-        while self.active:
+        while self.clock.getTime()<6:
             for loc in self.locations:
                 self.break_up_fights(loc)
                 self.handle_wasted(loc)
@@ -31,21 +31,18 @@ class SecurityGuard(threading.Thread):
         if not fighters:
             return
 
-        for spectator in fighters:
-            # Interrupt the fight
-            spectator.is_fighting = False
-            location.removeState(spectator, "fighting")
-
-            print(f"[Security {self.ID}] Breaks up fight involving {spectator.attributes['ID']}")
-
-            # LOG THE EVENT
-            metrics.log_security_event("fight_break", spectator.attributes['ID'], self.ID)
-
-            # 50%: escort out, 50%: warn
-            if random.random() < 0.5:
-                self.escort_out(spectator, location)
-            else:
-                print(f"[Security {self.ID}] Issues warning to {spectator.attributes['ID']}")
+        spectator = random.choice(fighters)
+        # Interrupt the fight
+        spectator.is_fighting = False
+        location.removeState(spectator, "fighting")
+        print(f"Security {self.ID} Breaks up fight involving {spectator.attributes['ID']}")
+        # LOG THE EVENT
+        metrics.log_security_event("fight_break", spectator.attributes['ID'], self.ID)
+        # 50%: escort out, 50%: warn
+        if random.random() < 0.5:
+            self.escort_out(spectator, location)
+        else:
+            print(f"Security {self.ID} Issues warning to {spectator.attributes['ID']}")
 
     # -----------------------------------------
     # 2. Handle wasted spectators
@@ -54,10 +51,9 @@ class SecurityGuard(threading.Thread):
         wasted = location.getStateList("wasted")
         if not wasted:
             return
-
         for s in wasted:
             if random.random() < 0.3:
-                print(f"[Security {self.ID}] Assists wasted spectator {s.attributes['ID']}")
+                print(f"Security {self.ID} Assists wasted spectator {s.attributes['ID']}")
                 self.escort_to_nurse(s, location)
 
     # -----------------------------------------
@@ -70,7 +66,7 @@ class SecurityGuard(threading.Thread):
 
         for s in drugged:
             if random.random() < 0.2:
-                print(f"[Security {self.ID}] DRUG EMERGENCY — {s.attributes['ID']}")
+                print(f"Security {self.ID} DRUG EMERGENCY — {s.attributes['ID']}")
                 self.escort_to_nurse(s, location)
 
     # -----------------------------------------
@@ -86,7 +82,7 @@ class SecurityGuard(threading.Thread):
 
         # If the person has been sent twice → kick them out
         if self.nurse_history[spectator] >= 2:
-            print(f"[Security {self.ID}] {spectator.attributes['ID']} has been sent to nurse twice → KICKING OUT.")
+            print(f"Security {self.ID} {spectator.attributes['ID']} has been sent to nurse twice → KICKING OUT.")
             
             # LOG THE EVENT
             metrics.log_security_event("kicked_out_repeat_offender", spectator.attributes['ID'], self.ID)
@@ -95,32 +91,31 @@ class SecurityGuard(threading.Thread):
             return
 
         # Regular nurse escort
-        success = location.sendTo(spectator, self.nurse_location)
-        if success:
-            print(f"[Security {self.ID}] Delivered {spectator.attributes['ID']} to Nurse Tent")
+        Search(spectator, self.locationList['nurse'], location)
+        if spectator.location in self.locationList['nurse']:
+            print(f"Security {self.ID} Delivered {spectator.attributes['ID']} to Nurse Tent")
 
             # LOG THE EVENT
             metrics.log_security_event("sent_to_nurse", spectator.attributes['ID'], self.ID)
 
         else:
-            print(f"[Security {self.ID}] Failed to move {spectator.attributes['ID']} to nurse")
+            print(f"Security {self.ID} Failed to move {spectator.attributes['ID']} to nurse")
 
         time.sleep(2)
 
     def escort_out(self, spectator, location):
-        success = location.sendTo(spectator, self.exit_location)
-        if success:
-            print(f"[Security {self.ID}] Removes {spectator.attributes['ID']} from festival")
-
+        spectator.escorted=True
+        Search(spectator, self.locationList['exits'], location)
+        if spectator.location in self.locationList['exits']:
+            print(f"Security {self.ID} Removes {spectator.attributes['ID']} from festival")
             # LOG THE EVENT
             metrics.log_security_event("kicked_out", spectator.attributes['ID'], self.ID)
-
             spectator.is_active = False
         else:
-            print(f"[Security {self.ID}] Failed to escort {spectator.attributes['ID']} out")
-
+            print(f"Security {self.ID} Failed to escort {spectator.attributes['ID']} out")
+        spectator.escorted=False
         time.sleep(3)
 
     def stop(self):
         self.active = False
-        print(f"[Security {self.ID}] Going off duty.")
+        print(f"Security {self.ID} Going off duty.")
