@@ -106,7 +106,6 @@ class Location:
     def receive(self, spectator, states, path):
         # Receives an spectator from another location
         if path==[]:
-            print('found')
             states = ['all'] + states
             for state in states:
                 if state in self.states.keys():

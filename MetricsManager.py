@@ -66,10 +66,6 @@ class MetricsManager:
 
         self.conn.commit()
 
-    # --------------------------------
-    # INSERT FUNCTIONS
-    # --------------------------------
-
     def log_sale(self, item, price, spectator_id):
         self.cur.execute(
             "INSERT INTO sales (item, price, spectator_id, timestamp) VALUES (?, ?, ?, ?)",
