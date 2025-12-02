@@ -1,14 +1,9 @@
-# Libraries
 import threading
-# import random
-import time
-
 
 # Location class
 class Location:
     def __init__(self):
         # Here go the lists and locks of the location
-        # Pay attention to the structure. The dictionary makes adding or removing new lists easier
         # Wasted, drugged, etc will be referred to as 'states'
         self.name=None
         self.neighbours = []
@@ -61,9 +56,6 @@ class Location:
 
     def checkStates(self, spectator):
         # Returns a list of all states of an spectator
-        # Removed spectator in 'all' check
-        # Should 'all' be returned?
-        # Might need revision
         states = []
         for state in self.states.keys():
             if state == 'all':

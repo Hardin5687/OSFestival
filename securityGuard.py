@@ -34,9 +34,6 @@ class SecurityGuard(threading.Thread):
                 exit=False
             time.sleep(0.1)
 
-    # -----------------------------------------
-    # 1. Break up fights
-    # -----------------------------------------
     def break_up_fights(self, location):
         fighters = location.getStateList("fighting")
         if not fighters:

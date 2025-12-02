@@ -28,7 +28,6 @@ class MetricsManager:
                 print("DB ERROR:", e)
             self.jobs.task_done()
 
-    # ------------- TABLE SETUP -------------
     def create_tables(self):
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS sales (
@@ -81,7 +80,6 @@ class MetricsManager:
 
         self.conn.commit()
 
-    # ------------- LOGGING USING THE QUEUE -------------
     def log_sale(self, item, price, spectator_id):
         self.jobs.put((
             "INSERT INTO sales (item, price, spectator_id, timestamp) VALUES (?, ?, ?, ?)",

@@ -174,6 +174,8 @@ class Spectator(threading.Thread):
                                   'drug':self.personality['drug'],
                                   'bathroom':0
                                   }
+                self.attributes['fun']=50
+                self.attributes['health']+=50
                 self.inventory['money']+=self.personality['moneyMin']
                 exit=False    
             time.sleep(0.1)
@@ -202,13 +204,17 @@ class Spectator(threading.Thread):
                 },
             'alcohol': {
                 True: {'fun':20, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':2, 'bathroom':0, 'health':-10},
+                'beer': {'fun':10, 'dance':1, 'hunger':1, 'thirst':-1, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':1, 'bathroom':1, 'health':-5},
+                'kalimotxo': {'fun':5, 'dance':1, 'hunger':1, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':1, 'bathroom':1, 'health':-10},
+                'cocktail': {'fun':20, 'dance':2, 'hunger':1, 'thirst':1, 'flirt':2, 'fight':2, 'alcohol':-1, 'drug':2, 'bathroom':0, 'health':-15},
+                'shot': {'fun':30, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':2, 'fight':1, 'alcohol':-1, 'drug':2, 'bathroom':0, 'health':-20},
                 False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':-1, 'drug':0, 'bathroom':0}
                 },
             'drug': {
-                'weed': {'fun':20, 'dance':1, 'hunger':2, 'thirst':2, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':-2, 'bathroom':0, 'health':-5},
-                'cocaine': {'fun':20, 'dance':2, 'hunger':-1, 'thirst':0, 'flirt':1, 'fight':2, 'alcohol':0, 'drug':-2, 'bathroom':0, 'health':-20},
-                'ecstasy': {'fun':30, 'dance':2, 'hunger':1, 'thirst':1, 'flirt':2, 'fight':1, 'alcohol':2, 'drug':-2, 'bathroom':0, 'health':-20},
-                'ketamine': {'fun':20, 'dance':2, 'hunger':2, 'thirst':1, 'flirt':2, 'fight':2, 'alcohol':2, 'drug':-2, 'bathroom':0, 'health':-20},
+                'weed': {'fun':20, 'dance':1, 'hunger':2, 'thirst':2, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':-1, 'bathroom':0, 'health':-5},
+                'cocaine': {'fun':20, 'dance':2, 'hunger':-1, 'thirst':0, 'flirt':1, 'fight':2, 'alcohol':0, 'drug':-1, 'bathroom':0, 'health':-20},
+                'ecstasy': {'fun':30, 'dance':2, 'hunger':1, 'thirst':1, 'flirt':2, 'fight':1, 'alcohol':2, 'drug':-1, 'bathroom':0, 'health':-20},
+                'ketamine': {'fun':20, 'dance':2, 'hunger':2, 'thirst':1, 'flirt':2, 'fight':2, 'alcohol':2, 'drug':-1, 'bathroom':0, 'health':-20},
                 False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'bathroom': {True:{}, False:{}},
@@ -511,10 +517,7 @@ class Spectator(threading.Thread):
         elif self.drunkness == 1:
             print(f"{self.attributes['ID']} is getting tipsy.")
 
-        # 8 — Update alcohol preference (use it or not)
-        self.preferences['alcohol'] = max(0, self.preferences['alcohol'] - 1)
-
-        return True
+        return drink
 
     
     def goDrugs(self):

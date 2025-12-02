@@ -1,6 +1,5 @@
 import threading
 import random
-import time
 from global_metrics import metrics
 
 class DrugDealer:

@@ -15,10 +15,8 @@ class Bathroom(Location):
         self.states['waiting']  = {'list': [], 'lock': threading.Lock()}
 
     def useBathroom(self, spectator):
-
         start_time = time.time()   # Track wait time
 
-        # === TRY TO ENTER IMMEDIATELY ===
         with self.states['occupied']['lock']:
             if len(self.states['occupied']['list']) < self.capacity:
 
@@ -43,15 +41,13 @@ class Bathroom(Location):
                 print(f"{spectator.attributes['ID']} left {self.name}.")
                 return True
 
-        # === BATHROOM FULL → WAITING ===
         with self.states['waiting']['lock']:
             self.states['waiting']['list'].append(spectator)
             print(f"{spectator.attributes['ID']} is waiting for {self.name}.")
 
-        # spectator is waiting → log first wait event
         metrics.log_bathroom_wait(
             spectator.attributes['ID'],
-            0
+            round(time.time()-start_time, 2)
         )
 
         return False

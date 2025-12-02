@@ -18,7 +18,7 @@ class FoodCart(Location): #spectator.inventory I do
             'sandwich': {'price': 5, 'stock': 60,'satiety':3},
             #alcoholic beverages
             'beer': {'price': 6, 'stock': 200},
-            'wine': {'price': 12, 'stock': 150},
+            'kalimotxo': {'price': 12, 'stock': 150},
             'cocktail': {'price': 15, 'stock': 100},
             'shot': {'price': 4, 'stock': 300},
             #water

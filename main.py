@@ -5,7 +5,7 @@ from bathroomClass import Bathroom
 from NurseClass import NurseTent
 from FoodCart import FoodCart
 from drugdealerClass import DrugDealer
-from securityguardcorrect import SecurityGuard
+from securityGuard import SecurityGuard
 from Clock import Clock
 from ArtistClass import Artist
 from global_metrics import metrics
@@ -66,8 +66,6 @@ def main():
         gate
     ]
 
-    # ------------------ NEIGHBOR GRAPH ------------------
-
     # Stage <-> Food
     stage1.neighbours = [food1]
     stage2.neighbours = [food1, food2]
@@ -93,15 +91,13 @@ def main():
     stage1.neighbours.append(gate)
     stage2.neighbours.append(gate)
     stage3.neighbours.append(gate)
-
-    # ------------------ DEALERS ------------------
+    
     dealers = [
         DrugDealer(stage1, 'Johnny Navajas'),
         DrugDealer(stage2, 'Mia Falcone'),
         DrugDealer(stage3, 'Snake? Snaaaaaaake!')
     ]
 
-    # ------------------ LOCATION LIST ------------------
     locationList = {
         'stages': [stage1, stage2, stage3],
         'foodCarts': [food1, food2],
@@ -112,11 +108,9 @@ def main():
         'exits': [gate]
     }
 
-    # ------------------ CLOCK ------------------
     clock = Clock(dayLength=1)
     clock.start()
 
-    # ------------------ SECURITY GUARDS ------------------
     security = [
         SecurityGuard([stage1], locationList, clock, name='James Bond'),
         SecurityGuard([stage2], locationList, clock, name='Jason Bourne'),
@@ -127,19 +121,17 @@ def main():
     for guard in security:
         guard.start()
 
-    # ------------------ ARTISTS ------------------
     for genre in musicStyles:
         artist = Artist(f'{genre}', random.randint(5, 10), genre, locationList, clock)
         artist.start()
 
-    # ------------------ SPECTATOR GENERATION ------------------
     ID = 1
-    while clock.getTime() < clock.dayLength/2:  # 30 seconds of spawning
+    while clock.getTime() < clock.dayLength/2:
         time.sleep(1)
         size = random.randint(0, 4) % 4  # group size 1–4
         group = []
 
-        start = random.choice(locationList['stages'])  # spawn at Exit Gate
+        start = random.choice(locationList['stages'])
 
         for i in range(size + 1):
             ticket_price = random.randint(50, 150)
