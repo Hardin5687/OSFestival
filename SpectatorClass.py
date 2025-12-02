@@ -100,10 +100,9 @@ class Spectator(threading.Thread):
         while True:
             #First we should be checking things like relationships that may force our decision
             decision, target = self.forcedDecisions()
-            print(decision)
             if decision == None:
                 decision = self.decision()
-            print(decision)
+            print(f'{self.attributes["ID"]} wants to {decision}. They are at {self.location.name}')
             if decision == 'dance':
                 didIDoTheThing = self.goDance()
             #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
@@ -133,7 +132,7 @@ class Spectator(threading.Thread):
                 break
             #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
             self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
-    
+            
     def updatePreferences(self, decision, didIDoTheThing):
         updateList = {
             'dance': {
@@ -163,7 +162,8 @@ class Spectator(threading.Thread):
             'drug': {
                 True: {'fun':30, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':0, 'drug':-1, 'bathroom':0},
                 False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':0, 'bathroom':0}
-                }
+                },
+            'bathroom': {True:{}, False:{}}
             }
         update = updateList[decision][didIDoTheThing]
         for key in update.keys():
@@ -196,7 +196,7 @@ class Spectator(threading.Thread):
         if self.inventory['food']==0:
             #If we have no food, go buy some
             #I'm still working on how to choose the closest decision or how to manage paths
-            Search(spectator=self, request=['foodCarts'], start=self.location)
+            Search(spectator=self, request=self.locationList['foodCarts'], start=self.location)
             food = random.choice(list(self.location.menu.keys()))
             if self.location.menu[food]['price']>self.inventory['money']:
                 return False

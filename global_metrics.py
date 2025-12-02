@@ -1,3 +1,3 @@
 # Global MetricsManager instance for shared use
-from MetricsManager import MetricsManager
-metrics = MetricsManager()
+from MetricsManager import Manager
+metrics = Manager()

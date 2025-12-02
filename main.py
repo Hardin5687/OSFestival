@@ -34,9 +34,9 @@ def main():
     locationList = {
         'all':[],
         'exits': [Location()],
-        'stages': [Stage()],
-        'foodCarts': [FoodCart()],
-        'bathrooms': [Bathroom()]
+        'stages': [Stage('Stage1')],
+        'foodCarts': [FoodCart('Bar1')],
+        'bathrooms': [Bathroom('Bathroom')]
         }
     for key in locationList.keys():
         if key != 'all':
@@ -48,11 +48,10 @@ def main():
                 location.makeNeighbours(neigh)
     locationList['dealers']=[DrugDealer(locationList['stages'][0])]
     clock = Clock()
-    for i in range(10):
-        while clock.getTime()<5:
-            time.sleep(0.1)
-            t = Spectator(i, personalities[random.choice(list(personalities.keys()))], locationList, clock)
-            t.start()
+    for i in range(1):
+        time.sleep(0.1)
+        t = Spectator(i, personalities[random.choice(list(personalities.keys()))], locationList, locationList['exits'][0], clock)
+        t.start()
     #Make locations
     #Connect locations
     #Make clock

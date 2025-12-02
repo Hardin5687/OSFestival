@@ -10,6 +10,7 @@ class Location:
         # Here go the lists and locks of the location
         # Pay attention to the structure. The dictionary makes adding or removing new lists easier
         # Wasted, drugged, etc will be referred to as 'states'
+        self.name=None
         self.neighbours = []
         self.queues = {'lock':threading.Lock()}
         self.states = {
