@@ -146,7 +146,7 @@ class Spectator(threading.Thread):
                 },
             'flirt': {
                 True: {'fun':15, 'dance':1, 'hunger':0, 'thirst':1, 'flirt':-1, 'fight':-1, 'alcohol':1, 'drug':0, 'bathroom':0},
-                False: {'fun':-5, 'dance':-1, 'hunger':0, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
+                False: {'fun':-5, 'dance':-1, 'hunger':0, 'thirst':1, 'flirt':0, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
                 },
             'fight': {
                 True: {'fun':-20, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':-1, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},

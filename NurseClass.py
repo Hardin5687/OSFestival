@@ -2,25 +2,14 @@ import threading
 import time
 import random
 
-class Nurse:
+from LocationClass import Location
+
+class NurseTent(Location):
     def __init__(self, name="Nurse Tent"):
+        super().__init__()
         self.name = name
         self.neighbours = []  # For movement via Search()
-        self.states = {
-            'all':     {'list': [], 'lock': threading.Lock()},
-            'healing': {'list': [], 'lock': threading.Lock()},
-        }
-
-    def receive(self, spectator, states=[]):
-        # Always add to "all"
-        states = ['all'] + states
-        for state in states:
-            if state in self.states:
-                with self.states[state]['lock']:
-                    self.states[state]['list'].append(spectator)
-
-        # Set current location
-        spectator.location = self
+        self.states['healing'] = {'list': [], 'lock': threading.Lock()}
 
     def heal(self, spectator):
 
@@ -54,6 +43,3 @@ class Nurse:
 
         return True
 
-    def addNeighbour(self, other_location):
-        if other_location not in self.neighbours:
-            self.neighbours.append(other_location)
