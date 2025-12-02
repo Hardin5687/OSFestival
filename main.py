@@ -48,10 +48,11 @@ def main():
                 location.makeNeighbours(neigh)
     locationList['dealers']=[DrugDealer(locationList['stages'][0])]
     clock = Clock()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    for i in range(10):
         while clock.getTime()<5:
             time.sleep(0.1)
-            executor.submit(Spectator, personalities[random.choice(list(personalities.keys()))], locationList, clock)
+            t = Spectator(i, personalities[random.choice(list(personalities.keys()))], locationList, clock)
+            t.start()
     #Make locations
     #Connect locations
     #Make clock

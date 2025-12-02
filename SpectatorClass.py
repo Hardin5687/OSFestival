@@ -8,7 +8,7 @@ from StageClass import Stage
 from FoodCart import FoodCart
 
 class Spectator(threading.Thread):
-    def __init__(self, ID, personality, locations:dict, clock):
+    def __init__(self, ID, personality, locations:dict, start, clock):
         super().__init__()
         self.clock=clock
         self.locationList=locations
@@ -20,11 +20,12 @@ class Spectator(threading.Thread):
                          'fun':50
                          }
         self.inventory={ #A dictionary of things the spectator has. If they already have food, when they get hungry they won't need to go elsewhere to buy it
+                        'water':0,
                         'food':0,
                         'money':random.randint(personality['moneyMin'], personality['moneyMax']),
                         'drugs':0 #Could be part of personality
                         }
-        self.location = None
+        self.location = start
         self.relationships=[]
         self.interactions=None
         self.preferences={ #A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.
@@ -86,8 +87,8 @@ class Spectator(threading.Thread):
             val=np.e**self.preferences[key]
             softmax.append([key, val])
             total+=val
-        softmax.append(['exit', self.clock.getTime()-self.attributes['fun']/100]-self.attributes['health']/100)
-        choice=random.randrange(0, total)
+        softmax.append(['exit', self.clock.getTime()-self.attributes['fun']/100-self.attributes['health']/100])
+        choice=random.random()*total
         total=0
         for decision in softmax:
             total+=decision[1]
@@ -95,11 +96,14 @@ class Spectator(threading.Thread):
                 return decision[0]
 
     def run(self):
+        print('start')
         while True:
             #First we should be checking things like relationships that may force our decision
             decision, target = self.forcedDecisions()
+            print(decision)
             if decision == None:
                 decision = self.decision()
+            print(decision)
             if decision == 'dance':
                 didIDoTheThing = self.goDance()
             #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
@@ -192,9 +196,7 @@ class Spectator(threading.Thread):
         if self.inventory['food']==0:
             #If we have no food, go buy some
             #I'm still working on how to choose the closest decision or how to manage paths
-            target=random.choice(self.locationList['foodCarts'])
-            self.location.sendTo(self, target)
-            #foodCart not implemented, so this is a draft
+            Search(spectator=self, request=['foodCarts'], start=self.location)
             food = random.choice(list(self.location.menu.keys()))
             if self.location.menu[food]['price']>self.inventory['money']:
                 return False
