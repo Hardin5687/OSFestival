@@ -9,7 +9,6 @@ class NurseTent(Location):
         self.states['healing'] = {'list': [], 'lock': threading.Lock()}
 
     def heal(self, spectator):
-
         print(f"Nurse: Treating {spectator.attributes['ID']}...")
 
         # Mark as healing
@@ -21,11 +20,8 @@ class NurseTent(Location):
 
         # Remove all harmful states
         for bad_state in ['wasted', 'drugged', 'fighting']:
-            if spectator in self.states.get(bad_state, {}).get('list', []):
-                with self.states[bad_state]['lock']:
-                    self.states[bad_state]['list'].remove(spectator)
+            self.removeState(spectator, bad_state)
 
-        # Reset intoxication completely
         if hasattr(spectator, "drunkness"):
             spectator.drunkness -= 1
 
@@ -35,9 +31,11 @@ class NurseTent(Location):
         # Reset fighting flag if it exists
         if hasattr(spectator, "is_fighting"):
             spectator.is_fighting = False
-
+        
+        spectator.attributes['health']+=50
+        
         print(f"Nurse: {spectator.attributes['ID']} is fully recovered and ready to return.")
-
+        
         # Remove from healing list
         with self.states['healing']['lock']:
             if spectator in self.states['healing']['list']:

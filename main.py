@@ -129,12 +129,12 @@ def main():
 
     # ------------------ ARTISTS ------------------
     for genre in musicStyles:
-        artist = Artist(f'{genre}', random.randint(5, 10), genre, locationList)
+        artist = Artist(f'{genre}', random.randint(5, 10), genre, locationList, clock)
         artist.start()
 
     # ------------------ SPECTATOR GENERATION ------------------
     ID = 1
-    while clock.getTime() < 0.5:  # 30 seconds of spawning
+    while clock.getTime() < clock.dayLength/2:  # 30 seconds of spawning
         time.sleep(1)
         size = random.randint(0, 4) % 4  # group size 1–4
         group = []

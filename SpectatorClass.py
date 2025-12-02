@@ -43,15 +43,16 @@ class Spectator(threading.Thread):
         self.targetLocation=None
         self.is_fighting=False
         self.escorted=False
-        self.is_active=True
+        self.active=True
+        self.personality=personality
 
     def forcedDecisions(self):
-        if self.clock.getTime()>6:
+        if self.clock.getTime()>self.clock.dayLength:
             return 'exit', None
         while self.escorted:
             time.sleep(0.1)
             continue
-        if not self.is_active:
+        if not self.active:
             return 'exit', None
         #If someone fought me and I won, I update
         if self.is_fighting!=True and self.is_fighting!=False:
@@ -111,56 +112,71 @@ class Spectator(threading.Thread):
                 return decision[0]
 
     def run(self):
-        while self.is_active:
-            time.sleep(1)
-            #First we should be checking things like relationships that may force our decision
-            decision, target = self.forcedDecisions()
-            if decision == None:
-                decision = self.decision()
-            print(f'{self.attributes["ID"]} wants to {decision}. They are at {self.location.name}')
-            if decision == 'dance':
-                didIDoTheThing = self.goDance()
-            #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
-            #This can affect our preferences. If we didnt do the thing (we dont like the music, we were rejected, whatever), we will inevitably grow angrier + other effects
-            #This mean action functions shoudl return wether or not we were successful
-            elif decision == 'hunger':
-                didIDoTheThing = self.goEat()
-            elif decision == 'flirt':
-                didIDoTheThing = self.goFlirt()
-            elif decision == 'fight':   
-                didIDoTheThing = self.goFight()
-            elif decision == 'thirst':
-                didIDoTheThing = self.goWater()
-            elif decision == 'alcohol':
-                didIDoTheThing = self.goAlcohol()
-            elif decision == 'drug':
-                didIDoTheThing = self.goDrugs()
-            elif decision == 'bathroom':
-                didIDoTheThing = self.goBathroom()
-            elif decision == 'nurse':
-                Search(self, self.locationList['nurse'], self.location)
-                if self.location in self.locationList['nurse']:
-                    for friend in self.relationships:
-                        friend.targetLocation=self.location
-                    didIDoTheThing=True
-                else:
-                    print(f'{self.attributes["ID"]} fucking dies')
-                    break
-                    didIDoTheThing=False
-            elif decision == 'exit':
-                if target:
-                    Search(self, [self.targetLocation], self.location)
-                    if self.location in self.locationList['exits']:
-                        break
-                else:
-                    Search(self, self.locationList['exits'], self.location)
-                    if self.location in self.locationList['exits']:
+        while self.clock.active:
+            while self.active:
+                time.sleep(1)
+                #First we should be checking things like relationships that may force our decision
+                decision, target = self.forcedDecisions()
+                if decision == None:
+                    decision = self.decision()
+                print(f'{self.attributes["ID"]} wants to {decision}. They are at {self.location.name}')
+                if decision == 'dance':
+                    didIDoTheThing = self.goDance()
+                #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
+                #This can affect our preferences. If we didnt do the thing (we dont like the music, we were rejected, whatever), we will inevitably grow angrier + other effects
+                #This mean action functions shoudl return wether or not we were successful
+                elif decision == 'hunger':
+                    didIDoTheThing = self.goEat()
+                elif decision == 'flirt':
+                    didIDoTheThing = self.goFlirt()
+                elif decision == 'fight':   
+                    didIDoTheThing = self.goFight()
+                elif decision == 'thirst':
+                    didIDoTheThing = self.goWater()
+                elif decision == 'alcohol':
+                    didIDoTheThing = self.goAlcohol()
+                elif decision == 'drug':
+                    didIDoTheThing = self.goDrugs()
+                elif decision == 'bathroom':
+                    didIDoTheThing = self.goBathroom()
+                elif decision == 'nurse':
+                    Search(self, self.locationList['nurse'], self.location)
+                    if self.location in self.locationList['nurse']:
+                        self.location.heal(self)
                         for friend in self.relationships:
                             friend.targetLocation=self.location
+                        didIDoTheThing=True
+                    else:
+                        print(f'{self.attributes["ID"]} fucking dies')
+                        self.active=False
+                        exit=False
                         break
-            #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
-            self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
-        print(f'{self.attributes["ID"]} finished')
+                elif decision == 'exit':
+                    Search(self, self.locationList['exits'], self.location)
+                    exit=True
+                    self.active=False
+                    break
+                #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
+                self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
+            if exit:
+                if random.randint(0, 100)<self.attributes['fun']:
+                    for person in self.relationships+[self]:
+                        with self.clock.lock:
+                            if person not in self.clock.comingBack:
+                                self.clock.comingBack.append(person)
+                self.preferences={ #A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.
+                                  'dance':5,
+                                  'hunger':random.randint(1, 3),
+                                  'thirst':random.randint(1, 3),
+                                  'flirt':self.personality['flirt'],
+                                  'fight':self.personality['fight'],
+                                  'alcohol':self.personality['alcohol'],
+                                  'drug':self.personality['drug'],
+                                  'bathroom':0
+                                  }
+                self.inventory['money']+=self.personality['moneyMin']
+                exit=False    
+            time.sleep(0.1)
             
     def updatePreferences(self, decision, didIDoTheThing):
         updateList = {
@@ -197,7 +213,7 @@ class Spectator(threading.Thread):
                 },
             'bathroom': {True:{}, False:{}},
             'exit': {True:{}, False:{}},
-            'nurse': {True:{'health':50}, False:{}}
+            'nurse': {True:{}, False:{}}
             }
         update = updateList[decision][didIDoTheThing]
         for key in update.keys():

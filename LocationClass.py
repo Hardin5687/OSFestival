@@ -90,8 +90,6 @@ class Location:
                 return False
             else:
                 states = self.checkStates(spectator)
-                if 'fighting' in states:
-                    return False
                 for state in states:
                     self.removeState(spectator, state)
         '''

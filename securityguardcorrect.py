@@ -16,15 +16,23 @@ class SecurityGuard(threading.Thread):
         self.clock=clock
 
     def run(self):
-        while self.active:
-            for loc in self.locations:
-                self.break_up_fights(loc)
-                self.handle_wasted(loc)
-                self.handle_drugged(loc)
+        while self.clock.active:
+            while self.active:
+                for loc in self.locations:
+                    self.break_up_fights(loc)
+                    self.handle_wasted(loc)
+                    self.handle_drugged(loc)
+                    time.sleep(1)
+                if self.clock.getTime()>self.clock.dayLength:
+                    self.active=False
+                    exit=True
                 time.sleep(1)
-            if self.clock.getTime()>6:
-                self.active=False
-            time.sleep(1)
+            if exit:
+                self.nurse_history={}
+                with self.clock.lock:
+                    self.clock.comingBack.append(self)
+                exit=False
+            time.sleep(0.1)
 
     # -----------------------------------------
     # 1. Break up fights
@@ -88,7 +96,7 @@ class SecurityGuard(threading.Thread):
         Search(spectator, self.locationList['nurse'], location)
         if spectator.location in self.locationList['nurse']:
             print(f"Security {self.ID} Delivered {spectator.attributes['ID']} to Nurse Tent")
-
+            spectator.location.heal(spectator)
             # LOG THE EVENT
             metrics.log_security_event("sent_to_nurse", spectator.attributes['ID'], self.ID)
 

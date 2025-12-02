@@ -9,6 +9,7 @@ class Clock(threading.Thread):
         self.dayLength=dayLength
         self.lock=threading.Lock()
         self.comingBack=[]
+        self.day=1
         
     def getTime(self):
         t=round((time.time()-self.startTime)/60, 2)
@@ -21,6 +22,7 @@ class Clock(threading.Thread):
         print('DAY 1 ENDED')
         time.sleep(5)
         print('DAY 2 BEGINS')
+        self.day=2
         self.startTime=time.time()
         for thing in self.comingBack:
             thing.active=True
@@ -29,6 +31,7 @@ class Clock(threading.Thread):
         print('DAY 2 ENDED')
         time.sleep(5)
         print('DAY 3 BEGINS')
+        self.day=3
         self.startTime=time.time()
         for thing in self.comingBack:
             thing.active=True
