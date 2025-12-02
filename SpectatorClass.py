@@ -185,11 +185,14 @@ class Spectator(threading.Thread):
                 False: {'fun':0, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':0, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'alcohol': {
-                True: {'fun':20, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0, 'health':-10},
-                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':-1, 'drug':-1, 'bathroom':0}
+                True: {'fun':20, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':2, 'bathroom':0, 'health':-10},
+                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':-1, 'drug':0, 'bathroom':0}
                 },
             'drug': {
-                True: {'fun':20, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':0, 'alcohol':0, 'drug':-2, 'bathroom':0, 'health':-20},
+                'weed': {'fun':20, 'dance':1, 'hunger':2, 'thirst':2, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':-2, 'bathroom':0, 'health':-5},
+                'cocaine': {'fun':20, 'dance':2, 'hunger':-1, 'thirst':0, 'flirt':1, 'fight':2, 'alcohol':0, 'drug':-2, 'bathroom':0, 'health':-20},
+                'ecstasy': {'fun':30, 'dance':2, 'hunger':1, 'thirst':1, 'flirt':2, 'fight':1, 'alcohol':2, 'drug':-2, 'bathroom':0, 'health':-20},
+                'ketamine': {'fun':20, 'dance':2, 'hunger':2, 'thirst':1, 'flirt':2, 'fight':2, 'alcohol':2, 'drug':-2, 'bathroom':0, 'health':-20},
                 False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'bathroom': {True:{}, False:{}},
@@ -513,7 +516,6 @@ class Spectator(threading.Thread):
         if self.location != dealer_location:
             Search(spectator=self, request=[dealer_location], start=self.location)
 
-            # ❗ FIXED: we must check if we reached the dealer's STAGE
             if self.location != dealer_location:
                 return False
 
@@ -546,4 +548,4 @@ class Spectator(threading.Thread):
         # Lower drug preference over time
         self.preferences['drug'] = max(0, self.preferences['drug'] - 1)
 
-        return True
+        return success

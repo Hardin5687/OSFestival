@@ -86,11 +86,6 @@ def main():
     nurse1.neighbours = [food1]
     nurse2.neighbours = [food2]
 
-    # ❌ Removed incorrect: gate.makeNeighbours()
-    # DO NOT USE makeNeighbours() for exits
-
-    # ----------------- EXIT SETUP (CORRECT) -----------------
-
     # Exit Gate -> Stages
     gate.neighbours = [stage1, stage2, stage3]
 
@@ -118,7 +113,8 @@ def main():
     }
 
     # ------------------ CLOCK ------------------
-    clock = Clock()
+    clock = Clock(dayLength=1)
+    clock.start()
 
     # ------------------ SECURITY GUARDS ------------------
     security = [
@@ -143,7 +139,7 @@ def main():
         size = random.randint(0, 4) % 4  # group size 1–4
         group = []
 
-        start = random.choice(locationList['exits'])  # spawn at Exit Gate
+        start = random.choice(locationList['stages'])  # spawn at Exit Gate
 
         for i in range(size + 1):
             ticket_price = random.randint(50, 150)

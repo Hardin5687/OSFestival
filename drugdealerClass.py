@@ -39,16 +39,13 @@ class DrugDealer:
 
             print(f"{self.name} sold {drug} to {spectator.attributes['ID']} for ${price}.")
 
-            # ⭐ NEW: log to SQLite
-            from global_metrics import metrics
             metrics.log_drug_sale(
                 drug,
                 price,
                 self.name,
                 spectator.attributes['ID']
             )
-
-            return True
+            return drug
 
 
     def restock(self):
