@@ -109,7 +109,7 @@ class Spectator(threading.Thread):
                 didIDoTheThing = self.goEat()
             elif decision == 'flirt':
                 didIDoTheThing = self.goFlirt()
-            elif decision == 'fight':
+            elif decision == 'fight':   
                 didIDoTheThing = self.goFight()
             elif decision == 'thirst':
                 didIDoTheThing = self.goWater()
@@ -133,8 +133,32 @@ class Spectator(threading.Thread):
     def updatePreferences(self, decision, didIDoTheThing):
         updateList = {
             'dance': {
-                True: {'fun':10, 'dance':-1, 'hunger':1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
-                False: {'fun':-10, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
+                True: {'fun':20, 'dance':-1, 'hunger':1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
+                False: {'fun':-20, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
+                },
+            'hunger': {
+                True: {'fun':0, 'dance':1, 'hunger':-1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':1, 'drug':0, 'bathroom':1},
+                False: {'fun':0, 'dance':-1, 'hunger':1, 'thirst':0, 'flirt':-1, 'fight':1, 'alcohol':-1, 'drug':0, 'bathroom':0}
+                },
+            'flirt': {
+                True: {'fun':15, 'dance':1, 'hunger':0, 'thirst':1, 'flirt':-1, 'fight':-1, 'alcohol':1, 'drug':0, 'bathroom':0},
+                False: {'fun':-5, 'dance':-1, 'hunger':0, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
+                },
+            'fight': {
+                True: {'fun':-20, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':-1, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
+                False: {'fun':0, 'dance':1, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':1, 'bathroom':0}
+                },
+            'thirst': {
+                True: {'fun':0, 'dance':0, 'hunger':0, 'thirst':-1, 'flirt':0, 'fight':0, 'alcohol':0, 'drug':0, 'bathroom':1},
+                False: {'fun':0, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':1, 'bathroom':0}
+                },
+            'alcohol': {
+                True: {'fun':25, 'dance':1, 'hunger':1, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':1, 'bathroom':0},
+                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':0, 'drug':1, 'bathroom':0}
+                },
+            'drug': {
+                True: {'fun':30, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':1, 'alcohol':0, 'drug':-1, 'bathroom':0},
+                False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':1, 'drug':0, 'bathroom':0}
                 }
             }
         update = updateList[decision][didIDoTheThing]
@@ -207,7 +231,7 @@ class Spectator(threading.Thread):
             if hasattr(self, 'drunkness'):
                 drunkness = self.drunkness
             else:
-                drunkness = 0  # To be implemented later
+                drunkness = 0  
             return anger + drunkness + friends
 
         my_power = fight_power(self)
