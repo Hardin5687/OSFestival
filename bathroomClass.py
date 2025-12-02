@@ -4,12 +4,12 @@ import time
 from LocationClass import Location
 
 class Bathroom(Location): 
-    def __init__(self, name, capacity = 3):
+    def __init__(self, name=None, capacity = 3):
         super().__init__()
         self.name = name
         self.capacity = capacity
-        self.state['occupied'] = {'list': [], 'lock': threading.Lock()}
-        self.state['waiting'] = {'list': [], 'lock': threading.Lock()}
+        self.states['occupied'] = {'list': [], 'lock': threading.Lock()}
+        self.states['waiting'] = {'list': [], 'lock': threading.Lock()}
 
     def useBathroom(self, spectator):
         # Try to use a bathroom stall
