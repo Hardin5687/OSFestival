@@ -5,8 +5,6 @@ from bathroomClass import Bathroom
 from FoodCart import FoodCart
 from drugdealerClass import DrugDealer
 from Clock import Clock
-import threading
-import concurrent.futures
 import random
 import time
 
@@ -48,7 +46,7 @@ def main():
                 location.makeNeighbours(neigh)
     locationList['dealers']=[DrugDealer(locationList['stages'][0])]
     clock = Clock()
-    for i in range(1):
+    for i in range(5):
         time.sleep(0.1)
         t = Spectator(i, personalities[random.choice(list(personalities.keys()))], locationList, locationList['exits'][0], clock)
         t.start()

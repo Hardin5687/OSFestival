@@ -12,7 +12,7 @@ class Location:
         # Wasted, drugged, etc will be referred to as 'states'
         self.name=None
         self.neighbours = []
-        self.queues = {'lock':threading.Lock()}
+        #self.queues = {'lock':threading.Lock()}
         self.states = {
             'all': {'list': [], 'lock': threading.Lock()},
             'wasted': {'list': [], 'lock': threading.Lock()},
@@ -22,6 +22,7 @@ class Location:
         
     def makeNeighbours(self, neighbour):
         if neighbour not in self.neighbours:
+            #self.queues[neighbour]=[]
             self.neighbours.append(neighbour)
             neighbour.makeNeighbours(self)
         
@@ -89,6 +90,7 @@ class Location:
                     return False
                 for state in states:
                     self.removeState(spectator, state)
+        '''
         with self.queues['lock']:
                     self.queues[path[0]].append(spectator)
         time.sleep(0.1)
@@ -97,17 +99,20 @@ class Location:
             continue
         with self.queues['lock']:
              self.queues[path[0]].pop(0)
+        '''
         path[0].receive(spectator, states, path[1:])
         return True
 
     def receive(self, spectator, states, path):
         # Receives an spectator from another location
         if path==[]:
+            print('found')
             states = ['all'] + states
             for state in states:
                 if state in self.states.keys():
                     with self.states[state]['lock']:
                         self.states[state]['list'].append(spectator)
+            spectator.location=self
         else:
             self.sendTo(spectator, path, states)
 

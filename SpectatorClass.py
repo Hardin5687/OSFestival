@@ -10,6 +10,8 @@ from FoodCart import FoodCart
 class Spectator(threading.Thread):
     def __init__(self, ID, personality, locations:dict, start, clock):
         super().__init__()
+        self.location = None
+        start.receive(self, [], [])
         self.clock=clock
         self.locationList=locations
         self.attributes={ #A dictionary of attributes that are NOT weights for decision making
@@ -25,7 +27,6 @@ class Spectator(threading.Thread):
                         'money':random.randint(personality['moneyMin'], personality['moneyMax']),
                         'drugs':0 #Could be part of personality
                         }
-        self.location = start
         self.relationships=[]
         self.interactions=None
         self.preferences={ #A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.
