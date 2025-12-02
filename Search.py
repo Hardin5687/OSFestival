@@ -18,7 +18,7 @@ class Search:
             l = self.pending.pop(0)
             location, path = l[0], l[1]
             if location in self.request:
-                start.sendTo(self.spectator, path)
+                return start.sendTo(self.spectator, path)
                 break
             elif location in self.visited:
                 continue

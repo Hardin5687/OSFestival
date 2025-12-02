@@ -6,6 +6,7 @@ from Search import Search
 
 from StageClass import Stage
 from FoodCart import FoodCart
+from bathroomClass import Bathroom
 
 class Spectator(threading.Thread):
     def __init__(self, ID, personality, locations:dict, start, clock):
@@ -65,10 +66,13 @@ class Spectator(threading.Thread):
             return 'exit', True
         if self.attributes['fun']<=0:
             return 'exit', None
+        if self.attributes['health']<=0:
+            print(f'{self.ID} fucking dies and goes to nurse')
+            return 'nurse', None
         #If my group has moved elsewhere, I follow them
         if self.targetLocation != None:
-            Search(spectator=self, request=[self.targetLocation], start=self.location)
-            self.targetLocation=None
+            if Search(spectator=self, request=[self.targetLocation], start=self.location):
+                self.targetLocation=None
         #If someone is flirting with my partner, I fight them
         if len(self.relationships)==1:
             if self.relationships[0].location == self.location:
@@ -134,14 +138,25 @@ class Spectator(threading.Thread):
                 didIDoTheThing = self.goDrugs()
             elif decision == 'bathroom':
                 didIDoTheThing = self.goBathroom()
+            elif decision == 'nurse':
+                Search(self, self.locationList['nurse'], self.location)
+                if self.location in self.locationList['nurse']:
+                    for friend in self.relationships:
+                        friend.targetLocation=self.location
+                    didIDoTheThing=True
+                else:
+                    didIDoTheThing=False
             elif decision == 'exit':
                 if target:
                     Search(self, [self.targetLocation], self.location)
+                    if self.location in self.locationList['exits']:
+                        break
                 else:
                     Search(self, self.locationList['exits'], self.location)
-                    for friend in self.relationships:
-                        friend.targetLocation=self.location
-                break
+                    if self.location in self.locationList['exits']:
+                        for friend in self.relationships:
+                            friend.targetLocation=self.location
+                        break
             #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
             self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
         print(f'{self.attributes["ID"]} finished')
@@ -161,22 +176,24 @@ class Spectator(threading.Thread):
                 False: {'fun':-10, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':0, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
                 },
             'fight': {
-                True: {'fun':10, 'dance':1, 'hunger':1, 'thirst':1, 'flirt':1, 'fight':-1, 'alcohol':-1, 'drug':-1, 'bathroom':0},
-                False: {'fun':-20, 'dance':-2, 'hunger':1, 'thirst':1, 'flirt':-1, 'fight':0, 'alcohol':2, 'drug':1, 'bathroom':0}
+                True: {'fun':10, 'dance':1, 'hunger':1, 'thirst':1, 'flirt':1, 'fight':-1, 'alcohol':-1, 'drug':-1, 'bathroom':0, 'health':-10},
+                False: {'fun':-20, 'dance':-2, 'hunger':1, 'thirst':1, 'flirt':-1, 'fight':0, 'alcohol':2, 'drug':1, 'bathroom':0, 'health':-30}
                 },
             'thirst': {
                 True: {'fun':0, 'dance':1, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':-1, 'alcohol':-1, 'drug':0, 'bathroom':1},
                 False: {'fun':0, 'dance':-1, 'hunger':0, 'thirst':0, 'flirt':0, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'alcohol': {
-                True: {'fun':20, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0},
+                True: {'fun':20, 'dance':2, 'hunger':1, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0, 'health':-10},
                 False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':0, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
             'drug': {
-                True: {'fun':20, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':0, 'alcohol':0, 'drug':-2, 'bathroom':0},
+                True: {'fun':20, 'dance':1, 'hunger':2, 'thirst':1, 'flirt':1, 'fight':0, 'alcohol':0, 'drug':-2, 'bathroom':0, 'health':-20},
                 False: {'fun':0, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':-1, 'drug':-1, 'bathroom':0}
                 },
-            'bathroom': {True:{}, False:{}}
+            'bathroom': {True:{}, False:{}},
+            'exit': {True:{}, False:{}},
+            'nurse': {True:{'health':50}, False:{}}
             }
         update = updateList[decision][didIDoTheThing]
         for key in update.keys():
@@ -195,26 +212,35 @@ class Spectator(threading.Thread):
             for stage in self.locationList['stages']:
                 if stage.music == self.attributes['musicFave']:
                     Search(spectator=self, request=[stage], start=self.location)
-                    for friend in self.relationships:
-                        friend.targetLocation=self.location
-                    time.sleep(5)
-                    return True
+                    if self.location in self.locationList['stages']:
+                        for friend in self.relationships:
+                            friend.targetLocation=self.location
+                        time.sleep(5)
+                        return True
+                    else:
+                        return False                
             Search(spectator=self, request=self.locationList['stages'], start=self.location)
-            for friend in self.relationships:
-                friend.targetLocation=self.location
-            time.sleep(5)
-            return True
+            if self.location in self.locationList['stages']:
+                for friend in self.relationships:
+                    friend.targetLocation=self.location
+                time.sleep(5)
+                return True
+            else:
+                return False
 
     def goEat(self):
         if self.inventory['food']==0:
             #If we have no food, go buy some
             #I'm still working on how to choose the closest decision or how to manage paths
             Search(spectator=self, request=self.locationList['foodCarts'], start=self.location)
-            food = random.choice(list(self.location.menu.keys()))
-            if self.location.menu[food]['price']>self.inventory['money']:
-                return False
+            if self.location in self.locationList['foodCarts']:
+                food = random.choice(list(self.location.menu.keys()))
+                if self.location.menu[food]['price']>self.inventory['money']:
+                    return False
+                else:
+                    self.inventory['food']+=self.location.purchase(self, food)
             else:
-                self.inventory['food']+=self.location.purchase(self, food)
+                return False
         while self.inventory['food']>0 and self.preferences['hunger']>0:
             time.sleep(1)
             self.inventory['food']-=1
@@ -269,6 +295,8 @@ class Spectator(threading.Thread):
             # Security interrupts fight
             if not self.is_fighting or not target.is_fighting:
                 print(f"Fight between {self.attributes['ID']} and {target.attributes['ID']} was stopped by security.")
+                self.location.removeState(target, "fighting")
+                self.location.removeState(self, "fighting")
                 self.is_fighting, target.is_fighting = False, False
                 return False
 
@@ -336,6 +364,8 @@ class Spectator(threading.Thread):
     def goBathroom(self):
         # Move to the nearest bathroom
         Search(self, request=self.locationList['bathrooms'], start=self.location)
+        if not self.location in self.locationList['bathrooms']:
+            return False
         bathroom = self.location
 
         # Try to use a stall
@@ -364,6 +394,8 @@ class Spectator(threading.Thread):
             # 3 — Move to the closest water source using Search()
             target = random.choice(water_sources)
             Search(spectator=self, request=[target], start=self.location)
+            if not self.location in self.locationList['foodCarts']:
+                return False
             fc = target
 
         # 4 — Try to buy water
@@ -400,6 +432,8 @@ class Spectator(threading.Thread):
             # 3 — Move to an alcohol source using Search
             target = random.choice(alcohol_sources)
             Search(spectator=self, request=[target], start=self.location)
+            if not self.location in self.locationList['foodCarts']:
+                return False
             fc = target
 
         # 4 — Pick a random alcohol item
@@ -451,6 +485,8 @@ class Spectator(threading.Thread):
         # If we are NOT at the dealer's location → walk there
         if self.location != dealer_location:
             Search(spectator=self, request=[dealer_location], start=self.location)
+            if not self.location in self.locationList['dealers']:
+                return False
 
         # Choose drug type from dealer inventory
         drug = random.choice(list(dealer.inventory.keys()))

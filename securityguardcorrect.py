@@ -12,15 +12,18 @@ class SecurityGuard(threading.Thread):
         self.locations = locations
         self.locationList = locationList
         self.active = True
-        self.nurse_history = {}   # track nurse visits
+        self.nurse_history = {}
+        self.clock=clock
 
     def run(self):
-        while self.clock.getTime()<6:
+        while self.active:
             for loc in self.locations:
                 self.break_up_fights(loc)
                 self.handle_wasted(loc)
                 self.handle_drugged(loc)
                 time.sleep(1)
+            if self.clock.getTime()>6:
+                self.active=False
             time.sleep(1)
 
     # -----------------------------------------

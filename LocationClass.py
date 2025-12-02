@@ -22,7 +22,10 @@ class Location:
         }
         
     def makeNeighbours(self, neighbour):
-        if neighbour not in self.neighbours:
+        if type(neighbour)==list:
+            for neigh in neighbour:
+                self.makeNeighbours(neigh)
+        elif neighbour not in self.neighbours:
             #self.queues[neighbour]=[]
             self.neighbours.append(neighbour)
             neighbour.makeNeighbours(self)
@@ -101,8 +104,7 @@ class Location:
         with self.queues['lock']:
              self.queues[path[0]].pop(0)
         '''
-        path[0].receive(spectator, states, path[1:])
-        return True
+        return path[0].receive(spectator, states, path[1:])
 
     def receive(self, spectator, states, path):
         # Receives an spectator from another location
@@ -113,6 +115,7 @@ class Location:
                     with self.states[state]['lock']:
                         self.states[state]['list'].append(spectator)
             spectator.location=self
+            return True
         else:
-            self.sendTo(spectator, path, states)
+            return self.sendTo(spectator, path, states)
 
