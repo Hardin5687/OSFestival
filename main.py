@@ -107,10 +107,12 @@ def main():
         'all': all_locations,
         'exits': [gate]
     }
-
-    clock = Clock(dayLength=5)
+    
+    #Make clock
+    clock = Clock(dayLength=4)
     clock.start()
-
+    
+    #Make and start guards
     security = [
         SecurityGuard([stage1], locationList, clock, name='James Bond'),
         SecurityGuard([stage2], locationList, clock, name='Jason Bourne'),
@@ -120,13 +122,15 @@ def main():
     ]
     for guard in security:
         guard.start()
-
+    
+    #Make and start artists
     for genre in musicStyles:
         artist = Artist(f'{genre}', random.randint(5, 10), genre, locationList, clock)
         artist.start()
-
+        
+    #Generate spectators in groups
     ID = 1
-    while clock.getTime() < clock.dayLength/2:
+    while clock.getTime() < clock.dayLength/4:
         time.sleep(1)
         size = random.randint(0, 4) % 4  # group size 1–4
         group = []

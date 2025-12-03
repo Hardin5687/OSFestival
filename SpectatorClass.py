@@ -47,11 +47,14 @@ class Spectator(threading.Thread):
         self.personality=personality
 
     def forcedDecisions(self):
+        #If the day is over, I leave
         if self.clock.getTime()>self.clock.dayLength:
             return 'exit', None
+        #If I am being escorted by security, I wait
         while self.escorted:
             time.sleep(0.1)
             continue
+        #If I have been kicked out, I deactivate
         if not self.active:
             return 'exit', None
         #If someone fought me and I won, I update
@@ -65,8 +68,10 @@ class Spectator(threading.Thread):
         #If my group left, I leave
         if self.targetLocation in self.locationList['exits']:
             return 'exit', True
+        #If i am not having fun, I leave
         if self.attributes['fun']<=0:
             return 'exit', None
+        #If my health is too low, I go to the nurse
         if self.attributes['health']<=0:
             return 'nurse', None
         #If my group has moved elsewhere, I follow them
@@ -96,13 +101,14 @@ class Spectator(threading.Thread):
         return None, None
 
     def decision(self):
-    #This should run soft max and return the spectator's next action
+    #Softmax decision function. Weights decisions on e to the power of the preference
         total=0
         softmax=[]
         for key in self.preferences.keys():
             val=np.e**self.preferences[key]
             softmax.append([key, val])
             total+=val
+        #Exit probability is a function of time, fun, and health
         softmax.append(['exit', self.clock.getTime()-self.attributes['fun']/100-self.attributes['health']/100])
         choice=random.random()*total
         total=0
@@ -117,14 +123,13 @@ class Spectator(threading.Thread):
                 time.sleep(1)
                 #First we should be checking things like relationships that may force our decision
                 decision, target = self.forcedDecisions()
+                #If we haven't been forced we will decide using softmax
                 if decision == None:
                     decision = self.decision()
                 print(f'{self.attributes["ID"]} wants to {decision}. They are at {self.location.name}')
+                #Perform the corresponding action. The returned value is used to update preferences
                 if decision == 'dance':
                     didIDoTheThing = self.goDance()
-                #The idea here is to return whether the action was succesful. Afterwards, we will maybe sleep (if we did do a thing)
-                #This can affect our preferences. If we didnt do the thing (we dont like the music, we were rejected, whatever), we will inevitably grow angrier + other effects
-                #This mean action functions shoudl return wether or not we were successful
                 elif decision == 'hunger':
                     didIDoTheThing = self.goEat()
                 elif decision == 'flirt':
@@ -156,15 +161,16 @@ class Spectator(threading.Thread):
                     exit=True
                     self.active=False
                     break
-                #At the end of each loop we update values? We get hungrier, thirstier, etc according to our decision
+                #At the end of each loop we update values
                 self.updatePreferences(decision=decision, didIDoTheThing=didIDoTheThing)
-            if exit:
-                if random.randint(0, 100)<self.attributes['fun']:
-                    for person in self.relationships+[self]:
+            if exit: #This only happens once after they leave
+                if random.randint(0, 100)<self.attributes['fun']: #Random chance to want to come back, depends on fun
+                    for person in self.relationships+[self]: #Bring your friends along
                         with self.clock.lock:
                             if person not in self.clock.comingBack:
                                 self.clock.comingBack.append(person)
-                self.preferences={ #A dictionary of values used for decision making. As we make choices this values will change. Higher values are more likely to get picked.
+                #Restore values
+                self.preferences={ 
                                   'dance':5,
                                   'hunger':random.randint(1, 3),
                                   'thirst':random.randint(1, 3),
@@ -181,7 +187,7 @@ class Spectator(threading.Thread):
             time.sleep(0.1)
             
     def updatePreferences(self, decision, didIDoTheThing):
-        updateList = {
+        updateList = { #This dictionary changes preferences according to their last action and wether it was successful
             'dance': {
                 True: {'fun':0, 'dance':-1, 'hunger':1, 'thirst':1, 'flirt':0, 'fight':-1, 'alcohol':0, 'drug':0, 'bathroom':0},
                 False: {'fun':-20, 'dance':0, 'hunger':0, 'thirst':0, 'flirt':1, 'fight':1, 'alcohol':1, 'drug':1, 'bathroom':0}
@@ -221,6 +227,7 @@ class Spectator(threading.Thread):
             'exit': {True:{}, False:{}},
             'nurse': {True:{}, False:{}}
             }
+        #Add the corresponding values to preferences. Note an increase of 2 is very noticeable in softmax
         update = updateList[decision][didIDoTheThing]
         for key in update.keys():
             if key in self.attributes.keys():
