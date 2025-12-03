@@ -392,11 +392,18 @@ class Spectator(threading.Thread):
 
 
     def goFlirt(self):
-        # Get all available people in the same location except myself
-        people = [s for s in self.location.getStateList() if s != self]
-        if not people:
-            return False
-        target = random.choice(people)
+        target=None
+        if len(self.relationships)==1:
+            if self.location==self.relationships[0].location:
+                target=self.relationships[0]
+            else:
+                if random.randint(1, 2)==1:
+                    return False
+        elif not target: # Get all available people in the same location except myself and choose one to flirt with
+            people = [s for s in self.location.getStateList() if s != self]
+            if not people:
+                return False
+            target = random.choice(people)
         if target.interactions==None:
             self.interactions=target
             target.interactions=self
