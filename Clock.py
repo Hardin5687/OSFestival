@@ -17,10 +17,10 @@ class Clock(threading.Thread):
 
     def run(self):
         self.startTime=time.time()
-        while round(time.time()-self.startTime)/60<self.dayLength+0.5:
+        while self.getTime()<self.dayLength+1:
             time.sleep(0.1)
         print('DAY 1 ENDED')
-        time.sleep(5)
+        time.sleep(15)
         print('DAY 2 BEGINS')
         self.day=2
         self.startTime=time.time()

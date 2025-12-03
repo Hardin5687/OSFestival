@@ -108,7 +108,7 @@ def main():
         'exits': [gate]
     }
 
-    clock = Clock(dayLength=1)
+    clock = Clock(dayLength=5)
     clock.start()
 
     security = [

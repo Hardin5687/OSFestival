@@ -301,7 +301,7 @@ class Spectator(threading.Thread):
 
     def goFight(self, target = None):
         if target == None:
-            targets = [s for s in self.location.states['all']['list'] if s != self]
+            targets = [s for s in self.location.getStateList() if (s != self or s not in self.location.getStateList(state='fighting'))]
             if targets == []:
                 return False
             target = random.choice(targets)
@@ -374,10 +374,10 @@ class Spectator(threading.Thread):
             loser = target if winner is self else self
         print(f"Fight resolved → Winner: {winner.attributes['ID']}  Loser: {loser.attributes['ID']}")
         # Remove fighting state
-        self.location.removeState(self, 'fighting')
-        self.location.removeState(target, 'fighting')
         self.is_fighting = False
         target.is_fighting = 'winner' if winner==target else 'loser'
+        self.location.removeState(self, 'fighting')
+        self.location.removeState(target, 'fighting')
         if winner == self:
             return True
         else:
@@ -386,7 +386,7 @@ class Spectator(threading.Thread):
 
     def goFlirt(self):
         # Get all available people in the same location except myself
-        people = [s for s in self.location.states['all']['list'] if s != self]
+        people = [s for s in self.location.getStateList() if s != self]
         if not people:
             return False
         target = random.choice(people)
